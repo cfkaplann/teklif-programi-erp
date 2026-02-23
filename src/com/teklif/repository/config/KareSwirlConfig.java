@@ -9,6 +9,13 @@ import com.teklif.model.UrunKart;
 import com.teklif.model.UrunKategori;
 
 public class KareSwirlConfig {
+	private static Map<OlcuAlanTipi,String> kasaLabel(){
+	    return Map.of(OlcuAlanTipi.KASA_WH,"Kasa Ölçüsü (WxH)");
+	}
+
+	private static Map<OlcuAlanTipi,String> bogazLabel(){
+	    return Map.of(OlcuAlanTipi.BOGAZ_WH,"Boğaz Ölçüsü (WxH)");
+	}
 
     public static List<UrunKart> get() {
 
@@ -50,7 +57,8 @@ public class KareSwirlConfig {
             	),
 
             false,
-            null
+            null,
+            kasaLabel()
         ),
 
         // =====================================================
@@ -93,7 +101,8 @@ public class KareSwirlConfig {
             	),
 
             false,
-            null
+            null,
+            kasaLabel()
         ),
 
         // =====================================================
@@ -139,7 +148,8 @@ public class KareSwirlConfig {
             	),
 
             false,
-            null
+            null,
+            kasaLabel()
         ),
 
         // =====================================================
@@ -183,7 +193,8 @@ public class KareSwirlConfig {
             	    )
             	),
             false,
-            null
+            null,
+            bogazLabel()
         ),
 
         // =====================================================
@@ -232,7 +243,8 @@ public class KareSwirlConfig {
             	),
 
             false,
-            null
+            null,
+            bogazLabel()
         )
         );
     }

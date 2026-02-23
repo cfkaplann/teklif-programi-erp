@@ -196,6 +196,14 @@ public class TeklifWorkspace extends JPanel {
 
 			OlcuComponent comp = OlcuPanelFactory.createComponent(tip);
 
+			// ⭐ LABEL OVERRIDE (UI only)
+			if (kart.getOlcuLabelMap() != null) {
+			    String yeniLabel = kart.getOlcuLabelMap().get(tip);
+			    if (yeniLabel != null && !yeniLabel.isBlank()) {
+			        comp.setLabelText(yeniLabel);
+			    }
+			}
+
 			// ⭐ CONFIGTEN COMBO DEĞERLERİ BAS
 			if (kart.getIzinliOlcuDegerleri() != null) {
 

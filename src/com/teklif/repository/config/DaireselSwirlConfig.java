@@ -9,6 +9,14 @@ import com.teklif.model.UrunKart;
 import com.teklif.model.UrunKategori;
 
 public class DaireselSwirlConfig {
+	
+	private static Map<OlcuAlanTipi,String> anmaCapLabel(){
+	    return Map.of(OlcuAlanTipi.KASA_CAP,"Anma Çapı (Ø)");
+	}
+
+	private static Map<OlcuAlanTipi,String> bogazCapLabel(){
+	    return Map.of(OlcuAlanTipi.KASA_CAP,"Boğaz Ölçüsü (Ø)");
+	}
 
     public static List<UrunKart> get() {
 
@@ -48,7 +56,8 @@ public class DaireselSwirlConfig {
         			    ),
 
         			    true,
-        			    null
+        			    null,
+        			    bogazCapLabel()
         			),
 
 
@@ -78,7 +87,8 @@ public class DaireselSwirlConfig {
 			    ),
 
 			    true,
-			    null
+			    null,
+			    anmaCapLabel()
             ),
 
             new UrunKart(
@@ -107,7 +117,8 @@ public class DaireselSwirlConfig {
 			    ),
 
 			    true,
-			    null
+			    null,
+			    bogazCapLabel()
             ),
 
             new UrunKart(
@@ -140,7 +151,8 @@ public class DaireselSwirlConfig {
 			    ),
 
 			    true,
-			    null
+			    null,
+			    bogazCapLabel()
             ),
 
             new UrunKart(
@@ -175,7 +187,8 @@ public class DaireselSwirlConfig {
 			    ),
 
 			    true,
-			    null
+			    null,
+			    bogazCapLabel()
             ),
 
             new UrunKart(
@@ -208,7 +221,8 @@ public class DaireselSwirlConfig {
 			    ),
 
 			    true,
-			    null
+			    null,
+			    bogazCapLabel()
             ),
 
             new UrunKart(
@@ -238,7 +252,8 @@ public class DaireselSwirlConfig {
 			    ),
 
 			    true,
-			    null
+			    null,
+			    bogazCapLabel()
             ),
 
             new UrunKart(
@@ -267,7 +282,8 @@ public class DaireselSwirlConfig {
 			    ),
 
 			    true,
-			    null
+			    null,
+			    bogazCapLabel()
             ),
 
             new UrunKart(
@@ -299,7 +315,8 @@ public class DaireselSwirlConfig {
 			    ),
 
 			    true,
-			    null
+			    null,
+			    bogazCapLabel()
             )
         );
     }

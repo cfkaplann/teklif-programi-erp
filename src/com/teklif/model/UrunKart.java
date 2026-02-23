@@ -11,7 +11,8 @@ public class UrunKart {
     private UrunKategori kategori;
     private String ad;
 
-
+ // ⭐ YENİ — Panel label override
+    private Map<OlcuAlanTipi, String> olcuLabelMap;
 
     private List<OzellikTipi> ozellikler;
     private Map<OzellikTipi, List<String>> izinliSecimler;
@@ -84,7 +85,23 @@ public class UrunKart {
         this.bogazFiltreMap = bogazFiltreMap;
     }
 
+    public UrunKart(String kod,
+            UrunKategori kategori,
+            String ad,
+            List<OzellikTipi> ozellikler,
+            Map<OzellikTipi, List<String>> izinliSecimler,
+            List<OlcuAlanTipi> zorunluOlculer,
+            Map<OlcuAlanTipi, List<String>> izinliOlcuDegerleri,
+            boolean aksesuarTekliMi,
+            Map<String, java.util.List<String>> bogazFiltreMap,
+            Map<OlcuAlanTipi, String> olcuLabelMap)
+    {
+        this(kod,kategori,ad,ozellikler,izinliSecimler,
+             zorunluOlculer,izinliOlcuDegerleri,aksesuarTekliMi,bogazFiltreMap);
 
+        this.olcuLabelMap = olcuLabelMap;
+    }
+    
     public String getKod(){ return kod; }
     public UrunKategori getKategori(){ return kategori; }
     public String getAd(){ return ad; }
@@ -109,6 +126,8 @@ public class UrunKart {
     public Map<String, java.util.List<String>> getBogazFiltreMap(){
         return bogazFiltreMap;
     }
-
+    public Map<OlcuAlanTipi, String> getOlcuLabelMap(){
+        return olcuLabelMap;
+    }
 
 }

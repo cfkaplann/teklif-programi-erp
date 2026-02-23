@@ -1,125 +1,258 @@
 package com.teklif.ui.table;
 
 import javax.swing.*;
+import com.teklif.export.ExcelExporter;
+
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 
 public class TeklifTablePanel extends JPanel {
 
-    private JTable table;
-    private DefaultTableModel model;
+	private JTable table;
+	private DefaultTableModel model;
 
-    public TeklifTablePanel() {
+	private JLabel lblGenel;
+	private JLabel lblKdv;
+	private JLabel lblKdvDahil;
 
-        setLayout(new BorderLayout());
+	public TeklifTablePanel() {
 
-        String[] kolonlar = {
+		setLayout(new BorderLayout());
 
-                "<html>SIRA<br>NO</html>",
-                "<html>ÜRÜN ADI</html>",
+		String[] kolonlar = {
 
-                "<html>YÜKSEKLİK<br>NET İÇ<hr>W(mm)</html>",
-                "<html>GENİŞLİK<br>NET İÇ<hr>H(mm)</html>",
-                "<html>UZUNLUK<br>NET İÇ<hr>L(mm)</html>",
-                "<html>ÇAP<br>NET İÇ<hr>Ø(mm)</html>",
+				"<html>SIRA<br>NO</html>", "<html>ÜRÜN ADI</html>",
 
-                "<html>ÇERÇEVE<br>TİPİ</html>",
-                "<html>DAMPER<br>TİPİ</html>",
-                "<html>RAL<br>KODU</html>",
-                "<html>MONTAJ<br>ŞEKLİ</html>",
+				"<html>YÜKSEKLİK<br>NET İÇ<hr>W(mm)</html>", "<html>GENİŞLİK<br>NET İÇ<hr>H(mm)</html>",
+				"<html>UZUNLUK<br>NET İÇ<hr>L(mm)</html>", "<html>ÇAP<br>NET İÇ<hr>Ø(mm)</html>",
 
-                "<html>MİKTAR</html>",
-                "<html>BİRİM</html>",
-                "<html>BİRİM<br>FİYAT</html>",
-                "<html>TOPLAM<br>FİYAT</html>"
-        };
+				"<html>ÇERÇEVE<br>TİPİ</html>", "<html>DAMPER<br>TİPİ</html>", "<html>RAL<br>KODU</html>",
+				"<html>MONTAJ<br>ŞEKLİ</html>",
 
-        model = new DefaultTableModel(kolonlar,0){
-            @Override
-            public boolean isCellEditable(int row,int column){
-                return false;
-            }
-        };
+				"<html>MİKTAR</html>", "<html>BİRİM</html>", "<html>BİRİM<br>FİYAT</html>",
+				"<html>TOPLAM<br>FİYAT</html>" };
 
-        table = new JTable(model);
+		model = new DefaultTableModel(kolonlar, 0) {
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				return false;
+			}
+		};
 
-        // =====================================================
-        // ⭐ FIT MODE (panel içine sığdır)
-        // =====================================================
+		table = new JTable(model);
 
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+		// =====================================================
+		// ⭐ FIT MODE (panel içine sığdır)
+		// =====================================================
 
-        // multi-line header için yükseklik
-        table.getTableHeader().setPreferredSize(new Dimension(0,65));
+		table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
-        ((DefaultTableCellRenderer)
-                table.getTableHeader().getDefaultRenderer())
-                .setHorizontalAlignment(JLabel.CENTER);
+		// multi-line header için yükseklik
+		table.getTableHeader().setPreferredSize(new Dimension(0, 65));
 
-        // =====================================================
-        // ⭐ FIT MODE GENİŞLİKLER (daha dar)
-        // =====================================================
+		((DefaultTableCellRenderer) table.getTableHeader().getDefaultRenderer()).setHorizontalAlignment(JLabel.CENTER);
 
-        table.getColumnModel().getColumn(0).setPreferredWidth(45);
-        table.getColumnModel().getColumn(1).setPreferredWidth(160);
+		// =====================================================
+		// ⭐ FIT MODE GENİŞLİKLER (daha dar)
+		// =====================================================
 
-        table.getColumnModel().getColumn(2).setPreferredWidth(80);
-        table.getColumnModel().getColumn(3).setPreferredWidth(80);
-        table.getColumnModel().getColumn(4).setPreferredWidth(80);
-        table.getColumnModel().getColumn(5).setPreferredWidth(80);
+		table.getColumnModel().getColumn(0).setPreferredWidth(45);
+		table.getColumnModel().getColumn(1).setPreferredWidth(160);
 
-        table.getColumnModel().getColumn(6).setPreferredWidth(95);
-        table.getColumnModel().getColumn(7).setPreferredWidth(95);
-        table.getColumnModel().getColumn(8).setPreferredWidth(90);
-        table.getColumnModel().getColumn(9).setPreferredWidth(90);
+		table.getColumnModel().getColumn(2).setPreferredWidth(80);
+		table.getColumnModel().getColumn(3).setPreferredWidth(80);
+		table.getColumnModel().getColumn(4).setPreferredWidth(80);
+		table.getColumnModel().getColumn(5).setPreferredWidth(80);
 
-        table.getColumnModel().getColumn(10).setPreferredWidth(70);
-        table.getColumnModel().getColumn(11).setPreferredWidth(70);
+		table.getColumnModel().getColumn(6).setPreferredWidth(95);
+		table.getColumnModel().getColumn(7).setPreferredWidth(95);
+		table.getColumnModel().getColumn(8).setPreferredWidth(90);
+		table.getColumnModel().getColumn(9).setPreferredWidth(90);
 
-        table.getColumnModel().getColumn(12).setPreferredWidth(95);
-        table.getColumnModel().getColumn(13).setPreferredWidth(105);
+		table.getColumnModel().getColumn(10).setPreferredWidth(70);
+		table.getColumnModel().getColumn(11).setPreferredWidth(70);
 
-        JScrollPane scroll = new JScrollPane(table);
-        add(scroll,BorderLayout.CENTER);
-    }
+		table.getColumnModel().getColumn(12).setPreferredWidth(95);
+		table.getColumnModel().getColumn(13).setPreferredWidth(105);
 
-    // =====================================================
+		JScrollPane scroll = new JScrollPane(table);
+		add(scroll, BorderLayout.CENTER);
 
-    public void addRow(Object[] data){
+		// =====================================================
+		// ⭐ SAĞ ALT TOPLAM PANELİ (ERP STYLE)
+		// =====================================================
 
-        int sıraNo = model.getRowCount() + 1;
+		JPanel southContainer = new JPanel(new BorderLayout());
 
-        Object[] row = new Object[data.length+1];
+		Font normalFont = new Font("Segoe UI", Font.PLAIN, 13);
+		Font boldFont = new Font("Segoe UI", Font.BOLD, 14);
+		Font totalFont = new Font("Segoe UI", Font.BOLD, 16);
+		
+		// ---------------------
+		// TOPLAM PANEL
+		// ---------------------
+		JPanel toplamPanel = new JPanel();
+		toplamPanel.setLayout(new BoxLayout(toplamPanel, BoxLayout.Y_AXIS));
+		toplamPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 20));
 
-        row[0] = sıraNo;
+		JLabel lblGenelText = new JLabel("GENEL TOPLAM");
+		JLabel lblKdvText = new JLabel("KDV %20");
+		JLabel lblKdvDahilText = new JLabel("KDV DAHİL GENEL");
 
-        for(int i=0;i<data.length;i++){
-            row[i+1] = data[i];
-        }
+		lblGenel = new JLabel("0.00");
+		lblKdv = new JLabel("0.00");
+		lblKdvDahil = new JLabel("0.00");
 
-        model.addRow(row);
-    }
+		lblGenel.setHorizontalAlignment(SwingConstants.RIGHT);
+		lblKdv.setHorizontalAlignment(SwingConstants.RIGHT);
+		lblKdvDahil.setHorizontalAlignment(SwingConstants.RIGHT);
+		
+		lblGenelText.setFont(normalFont);
+		lblKdvText.setFont(normalFont);
+		lblKdvDahilText.setFont(boldFont);
 
-    public void removeSelected(){
+		lblGenel.setFont(normalFont);
+		lblKdv.setFont(normalFont);
+		lblKdvDahil.setFont(totalFont);
 
-        int r = table.getSelectedRow();
+		toplamPanel.add(createRow(lblGenelText, lblGenel));
+		toplamPanel.add(createRow(lblKdvText, lblKdv));
 
-        if(r==-1) return;
+		JSeparator line = new JSeparator();
+		line.setMaximumSize(new Dimension(240,1));
+		toplamPanel.add(line);
 
-        model.removeRow(r);
+		toplamPanel.add(createRow(lblKdvDahilText, lblKdvDahil));
 
-        refreshRowNumbers();
-    }
+		// sağa yasla
+		JPanel rightWrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		rightWrapper.add(toplamPanel);
 
-    private void refreshRowNumbers(){
+		// ---------------------
+		// EXCEL BUTONU
+		// ---------------------
+		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		JButton btnExcel = new JButton("Excel'e Aktar");
+		buttonPanel.add(btnExcel);
 
-        for(int i=0;i<model.getRowCount();i++){
-            model.setValueAt(i+1,i,0);
-        }
-    }
+		southContainer.add(rightWrapper, BorderLayout.CENTER);
+		southContainer.add(buttonPanel, BorderLayout.SOUTH);
 
-    public JTable getTable(){
-        return table;
-    }
+		add(southContainer, BorderLayout.SOUTH);
+
+		btnExcel.addActionListener(e -> {
+			try {
+				// Şimdilik sabit TL gönderiyoruz.
+				// İstersen bunu sonradan Workspace'ten seçilen para birimini alacak şekilde
+				// yaparız.
+				ExcelExporter.export(table);
+
+			} catch (Exception ex) {
+				JOptionPane.showMessageDialog(this, "Excel aktarım hatası: " + ex.getMessage(), "Hata",
+						JOptionPane.ERROR_MESSAGE);
+			}
+		});
+	}
+
+	// =====================================================
+
+	public void addRow(Object[] data) {
+
+		int sıraNo = model.getRowCount() + 1;
+
+		Object[] row = new Object[data.length + 1];
+
+		row[0] = sıraNo;
+
+		for (int i = 0; i < data.length; i++) {
+			row[i + 1] = data[i];
+		}
+
+		model.addRow(row);
+		hesaplaToplamPanel();
+
+	}
+
+	public void removeSelected() {
+
+		int r = table.getSelectedRow();
+
+		if (r == -1)
+			return;
+
+		Object col1 = model.getValueAt(r, 1);
+		String txt = (col1 == null) ? "" : col1.toString().trim();
+
+		model.removeRow(r);
+
+		refreshRowNumbers();
+
+		hesaplaToplamPanel();
+
+	}
+
+	private void refreshRowNumbers() {
+
+		int sıra = 1;
+
+		for (int i = 0; i < model.getRowCount(); i++) {
+
+			Object col1 = model.getValueAt(i, 1);
+			String txt = (col1 == null) ? "" : col1.toString().trim();
+
+			boolean isSummary = txt.equals("GENEL TOPLAM") || txt.equals("KDV %20") || txt.equals("KDV DAHİL GENEL");
+
+			// boş satır (summary boşluğu)
+			boolean isBlank = (txt.isEmpty());
+
+			if (isSummary || isBlank) {
+				model.setValueAt("", i, 0); // sıra no boş bırak
+			} else {
+				model.setValueAt(sıra++, i, 0);
+			}
+		}
+	}
+
+	public JTable getTable() {
+		return table;
+	}
+
+	private void hesaplaToplamPanel() {
+
+		double toplam = 0;
+
+		for (int i = 0; i < model.getRowCount(); i++) {
+
+			Object val = model.getValueAt(i, 13);
+
+			if (val == null)
+				continue;
+
+			try {
+				toplam += Double.parseDouble(val.toString());
+			} catch (Exception ignore) {
+			}
+		}
+
+		double kdv = toplam * 0.20;
+		double dahil = toplam + kdv;
+
+		lblGenel.setText(String.format("%.2f", toplam));
+		lblKdv.setText(String.format("%.2f", kdv));
+		lblKdvDahil.setText(String.format("%.2f", dahil));
+	}
+	
+	private JPanel createRow(JLabel left, JLabel right){
+
+	    JPanel row = new JPanel(new BorderLayout());
+	    row.setMaximumSize(new Dimension(260,25));
+
+	    left.setBorder(BorderFactory.createEmptyBorder(0,0,0,10));
+
+	    row.add(left,BorderLayout.WEST);
+	    row.add(right,BorderLayout.EAST);
+
+	    return row;
+	}
 }

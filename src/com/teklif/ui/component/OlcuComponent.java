@@ -212,4 +212,9 @@ public class OlcuComponent extends JPanel {
             default: return tip.name();
         }
     }
+ // ⭐ UI label override (arka plan değişmez)
+    public void setLabelText(String text){
+        if(text == null || text.isBlank()) return;
+        lbl.setText(text);
+    }
 }
