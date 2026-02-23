@@ -362,6 +362,8 @@ public class TeklifWorkspace extends JPanel {
 		// =====================================================
 
 		Map<OzellikTipi, List<String>> secimler = OzellikRequestMapper.map(ozellikInputs);
+		
+		String ozellikSuffix = buildOzellikSuffix(secimler);
 
 		System.out.println(secimler);
 
@@ -435,7 +437,14 @@ public class TeklifWorkspace extends JPanel {
 			}
 		}
 
-		Object[] row = { kart.getAd(), genislik, yukseklik, uzunluk, cap, cerceve, damper, ral, montaj, miktarStr,
+		String urunAdiGosterim =
+		        "<html>"
+		        + kart.getAd()
+		        + buildUrunAdiOlcuEki()
+		        + ozellikSuffix
+		        + "</html>";
+		
+		Object[] row = { urunAdiGosterim, genislik, yukseklik, uzunluk, cap, cerceve, damper, ral, montaj, miktarStr,
 				"Adet", birimFiyat, toplamFiyat };
 
 		table.addRow(row);
@@ -511,5 +520,81 @@ public class TeklifWorkspace extends JPanel {
 
 		return true;
 	}
+	
+	// =====================================================
+	// ⭐ Ürün adı yanına ölçü eklemek için (KASA/BOĞAZ gibi)
+	// =====================================================
+	private String buildUrunAdiOlcuEki() {
 
+	    String kasaWh = "";
+	    String bogazWh = "";
+	    String kasaCap = "";
+
+	    for (OlcuComponent c : olcuComponents) {
+
+	        if (c.getTip() == OlcuAlanTipi.KASA_WH) {
+	            kasaWh = c.getValue();
+	        }
+
+	        if (c.getTip() == OlcuAlanTipi.BOGAZ_WH) {
+	            bogazWh = c.getValue();
+	        }
+
+	        if (c.getTip() == OlcuAlanTipi.KASA_CAP) {
+	            kasaCap = c.getValue();  // örn: "Ø300"
+	        }
+	    }
+
+	    // hiçbir ek yoksa boş dön
+	    if ((kasaWh == null || kasaWh.isBlank()) &&
+	        (bogazWh == null || bogazWh.isBlank()) &&
+	        (kasaCap == null || kasaCap.isBlank())) {
+	        return "";
+	    }
+
+	    // öncelik: KASA/BOĞAZ (anemostat gibi)
+	    if (kasaWh != null && !kasaWh.isBlank() && bogazWh != null && !bogazWh.isBlank()) {
+	        return " (" + kasaWh + "/" + bogazWh + ")";
+	    }
+
+	    // sadece kasa varsa
+	    if (kasaWh != null && !kasaWh.isBlank()) {
+	        return " (" + kasaWh + ")";
+	    }
+
+	    // sadece boğaz varsa
+	    if (bogazWh != null && !bogazWh.isBlank()) {
+	        return " (" + bogazWh + ")";
+	    }
+
+	    // dairesel gibi kasa çapı varsa
+	    if (kasaCap != null && !kasaCap.isBlank()) {
+	        return " (" + kasaCap + ")";
+	    }
+
+	    return "";
+	}
+
+	// =====================================================
+	// ⭐ Ürün adı altına özellik satırları ekler
+	// =====================================================
+	private String buildOzellikSuffix(Map<OzellikTipi, List<String>> secimler){
+
+	    StringBuilder sb = new StringBuilder();
+
+	    List<String> menfezList = secimler.get(OzellikTipi.MENFEZ_TIPI);
+	    List<String> aksesuarList = secimler.get(OzellikTipi.AKSESUAR_TIPI);
+
+	    if(menfezList != null && !menfezList.isEmpty()){
+	    	sb.append("<br>");
+	        sb.append(String.join(", ", menfezList));
+	    }
+
+	    if(aksesuarList != null && !aksesuarList.isEmpty()){
+	    	sb.append("<br>");
+	        sb.append(String.join(", ", aksesuarList));
+	    }
+
+	    return sb.toString();
+	}
 }

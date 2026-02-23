@@ -4,6 +4,7 @@ import javax.swing.*;
 import com.teklif.export.ExcelExporter;
 
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 
@@ -46,7 +47,7 @@ public class TeklifTablePanel extends JPanel {
 		// ⭐ FIT MODE (panel içine sığdır)
 		// =====================================================
 
-		table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+		table.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
 
 		// multi-line header için yükseklik
 		table.getTableHeader().setPreferredSize(new Dimension(0, 65));
@@ -57,13 +58,17 @@ public class TeklifTablePanel extends JPanel {
 		// ⭐ FIT MODE GENİŞLİKLER (daha dar)
 		// =====================================================
 
+		// SIRA NO
 		table.getColumnModel().getColumn(0).setPreferredWidth(45);
-		table.getColumnModel().getColumn(1).setPreferredWidth(160);
 
-		table.getColumnModel().getColumn(2).setPreferredWidth(80);
-		table.getColumnModel().getColumn(3).setPreferredWidth(80);
-		table.getColumnModel().getColumn(4).setPreferredWidth(80);
-		table.getColumnModel().getColumn(5).setPreferredWidth(80);
+		// ⭐ ÜRÜN ADI — GENİŞ
+		table.getColumnModel().getColumn(1).setPreferredWidth(360);
+
+		// ⭐ ÖLÇÜLER — DAR
+		table.getColumnModel().getColumn(2).setPreferredWidth(55);
+		table.getColumnModel().getColumn(3).setPreferredWidth(55);
+		table.getColumnModel().getColumn(4).setPreferredWidth(55);
+		table.getColumnModel().getColumn(5).setPreferredWidth(55);
 
 		table.getColumnModel().getColumn(6).setPreferredWidth(95);
 		table.getColumnModel().getColumn(7).setPreferredWidth(95);
@@ -170,6 +175,9 @@ public class TeklifTablePanel extends JPanel {
 		}
 
 		model.addRow(row);
+		
+		adjustRowHeight(model.getRowCount()-1);
+		
 		hesaplaToplamPanel();
 
 	}
@@ -254,5 +262,22 @@ public class TeklifTablePanel extends JPanel {
 	    row.add(right,BorderLayout.EAST);
 
 	    return row;
+	}
+	
+	// =====================================================
+	// ⭐ HTML içeriğe göre satır yüksekliği ayarla
+	// =====================================================
+	private void adjustRowHeight(int row){
+
+	    int column = 1; // ÜRÜN ADI kolonu
+
+	    TableCellRenderer renderer = table.getCellRenderer(row, column);
+	    Component comp = table.prepareRenderer(renderer, row, column);
+
+	    int preferredHeight = comp.getPreferredSize().height;
+
+	    if(table.getRowHeight(row) != preferredHeight){
+	        table.setRowHeight(row, preferredHeight);
+	    }
 	}
 }
