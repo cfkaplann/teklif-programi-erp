@@ -64,4 +64,31 @@ public class PricingService {
                 toplam
         );
     }
+ // =====================================================
+ // ⭐ MOTOR MAP DESTEKLİ YENİ HESAP
+ // =====================================================
+ public PricingResult fiyatHesapla(
+         PricingRequest req,
+         Map<OzellikTipi,List<String>> secimler,
+         Map<String,Double> motorFiyatlari){
+
+     PricingResult base = fiyatHesapla(req, secimler);
+
+     double motorToplam = 0;
+
+     if(motorFiyatlari != null){
+         for(Double d : motorFiyatlari.values()){
+        	 motorToplam += d * 1.10;   // ⭐ %10 fazlası
+         }
+     }
+
+     double yeniToplam = base.getToplam() + motorToplam;
+
+     return new PricingResult(
+             base.getHamFiyat(),
+             base.getOranEkleri(),
+             motorToplam,
+             yeniToplam
+     );
+ }
 }

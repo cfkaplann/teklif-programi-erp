@@ -11,6 +11,7 @@ import java.util.List;
 
 import com.teklif.model.OlcuAlanTipi;
 import com.teklif.model.OzellikTipi;
+import com.teklif.model.ParaBirimi;
 import com.teklif.model.UrunKart;
 import com.teklif.model.UrunKategori;
 import com.teklif.repository.UrunKataloguDeposu;
@@ -35,6 +36,9 @@ public class TeklifWorkspace extends JPanel {
 	private final ActionBarPanel actions;
 	private final TeklifTablePanel table;
 	private TeklifController controller = new TeklifController();
+	
+	private JPanel motorContainer;
+	private Map<String, JTextField> motorInputs = new HashMap<>();
 
 	private final List<OlcuComponent> olcuComponents = new ArrayList<>();
 	private final Map<OzellikTipi, JComponent> ozellikInputs = new HashMap<>();
@@ -42,6 +46,8 @@ public class TeklifWorkspace extends JPanel {
 	private JTextField txtMiktar;
 
 	public TeklifWorkspace() {
+		
+		
 
 		setLayout(new BorderLayout());
 
@@ -49,6 +55,14 @@ public class TeklifWorkspace extends JPanel {
 		form = new DynamicFormPanel();
 		actions = new ActionBarPanel();
 		table = new TeklifTablePanel();
+		
+		
+		motorContainer = new JPanel();
+		motorContainer.setLayout(new BoxLayout(motorContainer, BoxLayout.Y_AXIS));
+		motorContainer.setVisible(false);
+
+		// ⭐ motor alanını teknik panele ekliyoruz
+		form.getPnlTeknik().add(motorContainer);
 
 		// ⭐ başlangıçta gizli
 		form.setVisible(false);
@@ -79,6 +93,14 @@ public class TeklifWorkspace extends JPanel {
 
 		toolbar.getCmbKategori().addActionListener(e -> kategoriDegisti());
 		toolbar.getCmbUrun().addActionListener(e -> urunDegisti());
+		
+		toolbar.getCmbParaBirimi().addActionListener(e -> {
+
+		    ParaBirimi pb =
+		            (ParaBirimi) toolbar.getCmbParaBirimi().getSelectedItem();
+
+		    table.setParaBirimi(pb);
+		});
 
 		actions.getBtnUrunEkle().addActionListener(e -> urunEkle());
 		actions.getBtnUrunSil().addActionListener(e -> table.removeSelected());
@@ -313,6 +335,35 @@ public class TeklifWorkspace extends JPanel {
 
 		ozellikInputs.putAll(OzellikPanelFactory.createERPColumns(pnlTeknik, pnlRal, kart, () -> {
 		}));
+		
+		// ⭐ ürün değişince motor alanını resetle
+		motorContainer.removeAll();
+		motorContainer.setVisible(false);
+		motorInputs.clear();
+		
+		// ⭐ motor panelini tekrar ekle (removeAll sonrası)
+		pnlTeknik.add(motorContainer, 0);
+		
+		// =====================================================
+		// ⭐ AKSESUAR RADIO LISTENER (MOTOR FİYAT ALANI)
+		// =====================================================
+
+		JComponent comp = ozellikInputs.get(OzellikTipi.AKSESUAR_TIPI);
+
+		if(comp instanceof JPanel){
+
+		    JPanel grid = (JPanel) comp;
+
+		    for(Component c : grid.getComponents()){
+
+		        if(c instanceof JRadioButton){
+
+		            JRadioButton rb = (JRadioButton) c;
+
+		            rb.addActionListener(e -> updateMotorFields(grid));
+		        }
+		    }
+		}
 
 		revalidate();
 		repaint();
@@ -371,9 +422,41 @@ public class TeklifWorkspace extends JPanel {
 		// ⭐ CONTROLLER ÜZERİNDEN HESAPLA
 		// =====================================================
 
-		PricingResult result = controller.hesapla(req, secimler);
+		// =====================================================
+		// ⭐ MOTOR FİYATLARINI TOPLA
+		// =====================================================
 
-		double birimFiyat = result.getToplam();
+		Map<String, Double> motorFiyatlari = new HashMap<>();
+
+		for(Map.Entry<String, JTextField> e : motorInputs.entrySet()){
+
+		    String val = e.getValue().getText();
+
+		    if(val != null && !val.isBlank()){
+		    	motorFiyatlari.put(
+		    		    e.getKey(),
+		    		    Double.parseDouble(val.replace(",", "."))
+		    		);
+		    }
+		}
+
+		// =====================================================
+		// ⭐ CONTROLLER ÜZERİNDEN HESAPLA
+		// =====================================================
+
+		
+		// ⭐ SADECE GÖRÜNTÜ İÇİN
+		ParaBirimi pb =
+		        (ParaBirimi) toolbar.getCmbParaBirimi().getSelectedItem();
+
+		table.setParaBirimi(pb);
+
+		// ⭐ FİYATI HER ZAMAN TL HESAPLA
+		PricingResult tlResult =
+		        controller.hesapla(req, secimler, motorFiyatlari);
+
+		// ⭐ TABLOYA TL YAZ
+		double birimFiyat = tlResult.getToplam();
 		double toplamFiyat = birimFiyat * miktar;
 
 		String genislik = "";
@@ -596,5 +679,55 @@ public class TeklifWorkspace extends JPanel {
 	    }
 
 	    return sb.toString();
+	}
+	
+	private void updateMotorFields(JPanel grid){
+
+	    motorContainer.removeAll();
+	    motorInputs.clear();
+
+	    boolean enAzBirMotorVar = false;
+
+	    for(Component c : grid.getComponents()){
+
+	        if(c instanceof JRadioButton){
+
+	            JRadioButton rb = (JRadioButton) c;
+
+	            if(rb.isSelected()){
+
+	                String secim = rb.getText();
+
+	                boolean fiyatliAksesuar =
+	                        secim.equalsIgnoreCase("Servo Motor 24V") ||
+	                        secim.equalsIgnoreCase("Servo Motor 240V") ||
+	                        secim.equalsIgnoreCase("Limit Switch");
+
+	                if(fiyatliAksesuar){
+
+	                    enAzBirMotorVar = true;
+
+	                    JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT));
+
+	                    row.add(new JLabel(secim + " Fiyatı:"));
+
+	                    JTextField tf = new JTextField(8);
+	                    row.add(tf);
+
+	                    motorContainer.add(row);
+
+	                    motorInputs.put(secim, tf);
+	                }
+	            }
+	        }
+	    }
+
+	    motorContainer.setVisible(enAzBirMotorVar);
+
+	    motorContainer.revalidate();
+	    motorContainer.repaint();
+	    
+	    form.revalidate();
+	    form.repaint();
 	}
 }

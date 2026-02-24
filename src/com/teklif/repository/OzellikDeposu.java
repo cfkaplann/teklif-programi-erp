@@ -59,7 +59,7 @@ public class OzellikDeposu {
 		aksesuar.put("Contalı", new OzellikOran(0.02, false));
 		aksesuar.put("Manuel Kollu", new OzellikOran(0.00, true));
 		aksesuar.put("Servo Motor 24V", new OzellikOran(0.00, true));
-		aksesuar.put("Servo Motor230V", new OzellikOran(0.00, true));
+		aksesuar.put("Servo Motor 230V", new OzellikOran(0.00, true));
 		aksesuar.put("Limit Switch", new OzellikOran(0.00, true));
 		aksesuar.put("Klapeli", new OzellikOran(0.00, true));
 		aksesuar.put("Sigortalı", new OzellikOran(0.00, true));

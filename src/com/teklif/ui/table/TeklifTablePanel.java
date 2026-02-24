@@ -2,6 +2,8 @@ package com.teklif.ui.table;
 
 import javax.swing.*;
 import com.teklif.export.ExcelExporter;
+import com.teklif.model.ParaBirimi;
+import com.teklif.pricing.KurService;
 
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
@@ -12,7 +14,7 @@ public class TeklifTablePanel extends JPanel {
 
 	private JTable table;
 	private DefaultTableModel model;
-
+	private ParaBirimi paraBirimi = ParaBirimi.TL;
 	private JLabel lblGenel;
 	private JLabel lblKdv;
 	private JLabel lblKdvDahil;
@@ -42,7 +44,45 @@ public class TeklifTablePanel extends JPanel {
 		};
 
 		table = new JTable(model);
+		
+		DefaultTableCellRenderer priceRenderer = new DefaultTableCellRenderer() {
 
+		    @Override
+		    protected void setValue(Object value) {
+
+		        if (value == null) {
+		            setText("");
+		            return;
+		        }
+
+		        double v;
+
+		        // model bazen Double, bazen String atayabilir → ikisini de yakala
+		        if (value instanceof Number) {
+		            v = ((Number) value).doubleValue();
+		        } else {
+		            try {
+		                v = Double.parseDouble(value.toString());
+		            } catch (Exception ex) {
+		                super.setValue(value);
+		                return;
+		            }
+		        }
+
+		        String symbol;
+		        switch (paraBirimi) {
+		            case EUR: symbol = " €"; break;
+		            case USD: symbol = " $"; break;
+		            default:  symbol = " ₺";
+		        }
+
+		        double shown = KurService.cevir(v, paraBirimi); // ⭐ TL → Seçili para birimi
+
+		        setHorizontalAlignment(SwingConstants.RIGHT);
+		        setText(String.format("%.2f%s", shown, symbol));
+		    }
+		};
+		
 		// =====================================================
 		// ⭐ FIT MODE (panel içine sığdır)
 		// =====================================================
@@ -80,6 +120,9 @@ public class TeklifTablePanel extends JPanel {
 
 		table.getColumnModel().getColumn(12).setPreferredWidth(95);
 		table.getColumnModel().getColumn(13).setPreferredWidth(105);
+		
+		table.getColumnModel().getColumn(12).setCellRenderer(priceRenderer); // Birim Fiyat
+		table.getColumnModel().getColumn(13).setCellRenderer(priceRenderer); // Toplam Fiyat
 
 		JScrollPane scroll = new JScrollPane(table);
 		add(scroll, BorderLayout.CENTER);
@@ -221,6 +264,18 @@ public class TeklifTablePanel extends JPanel {
 			}
 		}
 	}
+	
+	
+	
+	    public void setParaBirimi(ParaBirimi pb){
+	        this.paraBirimi = (pb == null) ? ParaBirimi.TL : pb;
+
+	        model.fireTableDataChanged(); // ⭐ renderer tekrar çalışır
+	        table.repaint();
+
+	        hesaplaToplamPanel();
+	    }
+	
 
 	public JTable getTable() {
 		return table;
@@ -238,7 +293,9 @@ public class TeklifTablePanel extends JPanel {
 				continue;
 
 			try {
-				toplam += Double.parseDouble(val.toString());
+				if(val instanceof Number){
+				    toplam += ((Number)val).doubleValue();
+				}
 			} catch (Exception ignore) {
 			}
 		}
@@ -246,9 +303,20 @@ public class TeklifTablePanel extends JPanel {
 		double kdv = toplam * 0.20;
 		double dahil = toplam + kdv;
 
-		lblGenel.setText(String.format("%.2f", toplam));
-		lblKdv.setText(String.format("%.2f", kdv));
-		lblKdvDahil.setText(String.format("%.2f", dahil));
+		String symbol;
+		switch (paraBirimi) {
+		    case EUR: symbol = " €"; break;
+		    case USD: symbol = " $"; break;
+		    default:  symbol = " ₺";
+		}
+
+		double shownToplam = KurService.cevir(toplam, paraBirimi);
+		double shownKdv = KurService.cevir(kdv, paraBirimi);
+		double shownDahil = KurService.cevir(dahil, paraBirimi);
+
+		lblGenel.setText(String.format("%.2f%s", shownToplam, symbol));
+		lblKdv.setText(String.format("%.2f%s", shownKdv, symbol));
+		lblKdvDahil.setText(String.format("%.2f%s", shownDahil, symbol));
 	}
 	
 	private JPanel createRow(JLabel left, JLabel right){

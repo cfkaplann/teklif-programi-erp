@@ -24,7 +24,7 @@ public class DaireselDamperConfig {
 								OzellikTipi.MONTAJ, List.of("Vidalı", "Spot Yaylı"),
 
 								OzellikTipi.AKSESUAR_TIPI,
-								List.of("Contalı", "Manuel Kollu", "Servo Motor 24V", "Servo Motor230V", "Limit Switch",
+								List.of("Contalı", "Manuel Kollu", "Servo Motor 24V", "Servo Motor 230V", "Limit Switch",
 										"Klapeli")),
 						// 🔥 ZORUNLU ÖLÇÜLER
 						List.of(OlcuAlanTipi.CAP)),
@@ -38,7 +38,7 @@ public class DaireselDamperConfig {
 								OzellikTipi.MONTAJ, List.of("Vidalı", "Spot Yaylı"),
 
 								OzellikTipi.AKSESUAR_TIPI,
-								List.of("Contalı", "Manuel Kollu", "Servo Motor 24V", "Servo Motor230V",
+								List.of("Contalı", "Manuel Kollu", "Servo Motor 24V", "Servo Motor 230V",
 										"Limit Switch")),
 						// 🔥 ZORUNLU ÖLÇÜLER
 						List.of(OlcuAlanTipi.CAP)),
@@ -50,7 +50,7 @@ public class DaireselDamperConfig {
 								OzellikTipi.MONTAJ, List.of("Vidalı", "Spot Yaylı"),
 
 								OzellikTipi.AKSESUAR_TIPI,
-								List.of("Contalı", "Manuel Kollu", "Servo Motor 24V", "Servo Motor230V",
+								List.of("Contalı", "Manuel Kollu", "Servo Motor 24V", "Servo Motor 230V",
 										"Limit Switch")),
 						// 🔥 ZORUNLU ÖLÇÜLER
 						List.of(OlcuAlanTipi.CAP)),
@@ -62,7 +62,7 @@ public class DaireselDamperConfig {
 								OzellikTipi.MONTAJ, List.of("Vidalı", "Spot Yaylı"),
 
 								OzellikTipi.AKSESUAR_TIPI,
-								List.of("Contalı", "Manuel Kollu", "Servo Motor 24V", "Servo Motor230V",
+								List.of("Contalı", "Manuel Kollu", "Servo Motor 24V", "Servo Motor 230V",
 										"Limit Switch")),
 						// 🔥 ZORUNLU ÖLÇÜLER
 						List.of(OlcuAlanTipi.CAP)),
@@ -73,7 +73,7 @@ public class DaireselDamperConfig {
 								OzellikTipi.MONTAJ, List.of("Vidalı", "Spot Yaylı"),
 
 								OzellikTipi.AKSESUAR_TIPI,
-								List.of("Contalı", "Manuel Kollu", "Servo Motor 24V", "Servo Motor230V", "Limit Switch",
+								List.of("Contalı", "Manuel Kollu", "Servo Motor 24V", "Servo Motor 230V", "Limit Switch",
 										"Klapeli")),
 						// 🔥 ZORUNLU ÖLÇÜLER
 						List.of(OlcuAlanTipi.CAP))
