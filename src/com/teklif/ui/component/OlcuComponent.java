@@ -31,7 +31,7 @@ public class OlcuComponent extends JPanel {
         // =====================================================
 
         lbl = new JLabel(labelBul(tip));
-        lbl.setPreferredSize(new Dimension(95,22));
+        lbl.setPreferredSize(new Dimension(160,22));
 
         gbc.gridx = 0;
         gbc.gridy = 0;

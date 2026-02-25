@@ -112,17 +112,18 @@ public class TeklifWorkspace extends JPanel {
 
 	private void initKategori() {
 
-		toolbar.getCmbKategori().removeAllItems();
+	    toolbar.getCmbKategori().removeAllItems();
 
-		toolbar.getCmbKategori().addItem("Kategori Seçiniz");
+	    // ✅ placeholder
+	    toolbar.getCmbKategori().addItem(null);
 
-		for (UrunKategori k : UrunKataloguDeposu.tumKategoriler()) {
-			toolbar.getCmbKategori().addItem(k.name());
-		}
+	    for (UrunKategori k : UrunKataloguDeposu.tumKategoriler()) {
+	        toolbar.getCmbKategori().addItem(k);
+	    }
 
-		toolbar.getCmbUrun().removeAllItems();
-		toolbar.getCmbUrun().addItem("Ürün Seçiniz");
-		toolbar.getCmbUrun().setEnabled(false);
+	    toolbar.getCmbUrun().removeAllItems();
+	    toolbar.getCmbUrun().addItem(null);   // ✅ placeholder artık null
+	    toolbar.getCmbUrun().setEnabled(false);
 	}
 
 	// =====================================================
@@ -131,40 +132,38 @@ public class TeklifWorkspace extends JPanel {
 
 	private void kategoriDegisti() {
 
-		toolbar.getCmbUrun().removeAllItems();
-		toolbar.getCmbUrun().addItem("Ürün Seçiniz");
+	    toolbar.getCmbUrun().removeAllItems();
+	    toolbar.getCmbUrun().addItem(null); // ✅ placeholder
+	    toolbar.getCmbUrun().setEnabled(false);
 
-		String kat = (String) toolbar.getCmbKategori().getSelectedItem();
+	    UrunKategori kat = (UrunKategori) toolbar.getCmbKategori().getSelectedItem();
 
-		// ⭐ KATEGORİ SEÇİNİZ seçildi → HER ŞEY RESET
-		if (kat == null || kat.equals("Kategori Seçiniz")) {
+	    // ✅ Kategori seçilmediyse reset
+	    if (kat == null) {
 
-			toolbar.getCmbUrun().setEnabled(false);
+	        form.getPnlOlculer().removeAll();
+	        form.getPnlTeknik().removeAll();
+	        form.getPnlRalAksesuar().removeAll();
 
-			// ⭐ FORM RESET
-			form.getPnlOlculer().removeAll();
-			form.getPnlTeknik().removeAll();
-			form.getPnlRalAksesuar().removeAll();
+	        olcuComponents.clear();
+	        ozellikInputs.clear();
 
-			olcuComponents.clear();
-			ozellikInputs.clear();
+	        form.setVisible(false);
+	        actions.setVisible(false);
 
-			form.setVisible(false);
-			actions.setVisible(false);
+	        revalidate();
+	        repaint();
+	        return;
+	    }
 
-			revalidate();
-			repaint();
+	    // ✅ Ürünleri doldur
+	    for (UrunKart u : UrunKataloguDeposu.tumUrunler()) {
+	        if (u.getKategori() == kat) {
+	            toolbar.getCmbUrun().addItem(u);
+	        }
+	    }
 
-			return;
-		}
-
-		toolbar.getCmbUrun().setEnabled(true);
-
-		for (UrunKart u : UrunKataloguDeposu.tumUrunler()) {
-			if (u.getKategori().name().equals(kat)) {
-				toolbar.getCmbUrun().addItem(u);
-			}
-		}
+	    toolbar.getCmbUrun().setEnabled(true);
 	}
 
 	// =====================================================
@@ -173,21 +172,19 @@ public class TeklifWorkspace extends JPanel {
 
 	private void urunDegisti() {
 
-		Object selected = toolbar.getCmbUrun().getSelectedItem();
+	    UrunKart kart = (UrunKart) toolbar.getCmbUrun().getSelectedItem();
 
-		// ⭐ Ürün Seçiniz ghost → form kapalı
-		if (!(selected instanceof UrunKart)) {
-			form.setVisible(false);
-			actions.setVisible(false);
-			return;
-		}
+	    // ✅ Ürün seçilmediyse kapat
+	    if (kart == null) {
+	        form.setVisible(false);
+	        actions.setVisible(false);
+	        return;
+	    }
 
-		UrunKart kart = (UrunKart) selected;
+	    form.setVisible(true);
+	    actions.setVisible(true);
 
-		form.setVisible(true);
-		actions.setVisible(true);
-
-		rebuildForm(kart);
+	    rebuildForm(kart);
 	}
 
 	// =====================================================
@@ -592,11 +589,7 @@ public class TeklifWorkspace extends JPanel {
 				if (val == null || val.isBlank())
 					return false;
 
-				// ⭐ BOYALI ise RAL kodu zorunlu
-				if ("Boyalı".equalsIgnoreCase(rc.getRalSecim())
-						&& (rc.getRalKod() == null || rc.getRalKod().isBlank())) {
-					return false;
-				}
+				
 			}
 
 		}
@@ -700,7 +693,7 @@ public class TeklifWorkspace extends JPanel {
 
 	                boolean fiyatliAksesuar =
 	                        secim.equalsIgnoreCase("Servo Motor 24V") ||
-	                        secim.equalsIgnoreCase("Servo Motor 240V") ||
+	                        secim.equalsIgnoreCase("Servo Motor 230V") ||
 	                        secim.equalsIgnoreCase("Limit Switch");
 
 	                if(fiyatliAksesuar){

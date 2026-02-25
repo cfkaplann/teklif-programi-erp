@@ -4,12 +4,13 @@ import javax.swing.*;
 import java.awt.*;
 
 import com.teklif.model.ParaBirimi;
-import com.teklif.ui.util.PlaceholderComboRenderer;
+import com.teklif.model.UrunKart;
+import com.teklif.model.UrunKategori;
 
 public class ToolbarPanel extends JPanel {
 
-    private JComboBox<String> cmbKategori;
-    private JComboBox<Object> cmbUrun;
+    private JComboBox<UrunKategori> cmbKategori;
+    private JComboBox<UrunKart> cmbUrun;
     private JComboBox<ParaBirimi> cmbParaBirimi;
 
     public ToolbarPanel(){
@@ -19,11 +20,30 @@ public class ToolbarPanel extends JPanel {
         cmbKategori = new JComboBox<>();
         cmbUrun     = new JComboBox<>();
 
-        cmbKategori.addItem("Kategori Seçiniz");
-        cmbUrun.addItem("Ürün Seçiniz");
+        // ✅ Placeholder için null ekle
+        cmbKategori.addItem(null);
+        cmbUrun.addItem(null);
 
-        cmbKategori.setRenderer(new PlaceholderComboRenderer("Kategori Seçiniz"));
-        cmbUrun.setRenderer(new PlaceholderComboRenderer("Ürün Seçiniz"));
+        // ✅ Enum + Object için renderer (null gelirse placeholder yaz)
+        cmbKategori.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                                                          boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                setText(value == null ? "Kategori Seçiniz" : value.toString());
+                return this;
+            }
+        });
+
+        cmbUrun.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                                                          boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                setText(value == null ? "Ürün Seçiniz" : value.toString());
+                return this;
+            }
+        });
 
         add(new JLabel("Kategori"));
         add(cmbKategori);
@@ -38,9 +58,8 @@ public class ToolbarPanel extends JPanel {
         add(cmbParaBirimi);
     }
 
-    public JComboBox<String> getCmbKategori(){ return cmbKategori; }
-    public JComboBox<Object> getCmbUrun(){ return cmbUrun; }
-    public JComboBox<ParaBirimi> getCmbParaBirimi() {
-        return cmbParaBirimi;
-    }
+    // ✅ Getter tipleri düzeltildi
+    public JComboBox<UrunKategori> getCmbKategori(){ return cmbKategori; }
+    public JComboBox<UrunKart> getCmbUrun(){ return cmbUrun; }
+    public JComboBox<ParaBirimi> getCmbParaBirimi() { return cmbParaBirimi; }
 }

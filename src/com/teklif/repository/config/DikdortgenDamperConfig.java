@@ -73,7 +73,7 @@ public class DikdortgenDamperConfig {
 								OzellikTipi.MONTAJ, List.of("Hava Kanalına Montaj", "Duvar Geçiş Parçası İle"),
 
 								OzellikTipi.AKSESUAR_TIPI,
-								List.of("Contalı", "Manuel Kollu", "Servo Motor 24V", "Servo Motor 230V",
+								List.of("Sigortalı", "Servo Motor 24V", "Servo Motor 230V",
 										"Limit Switch")),
 						// 🔥 ZORUNLU ÖLÇÜLER
 						List.of(OlcuAlanTipi.GENISLIK, OlcuAlanTipi.YUKSEKLIK)),
@@ -84,7 +84,7 @@ public class DikdortgenDamperConfig {
 								OzellikTipi.MONTAJ, List.of("Hava Kanalına Montaj", "Duvar Geçiş Parçası İle"),
 
 								OzellikTipi.AKSESUAR_TIPI,
-								List.of("Contalı", "Manuel Kollu", "Servo Motor 24V", "Servo Motor 230V",
+								List.of("Sigortalı", "Servo Motor 24V", "Servo Motor 230V",
 										"Limit Switch")),
 						// 🔥 ZORUNLU ÖLÇÜLER
 						List.of(OlcuAlanTipi.GENISLIK, OlcuAlanTipi.YUKSEKLIK)),
@@ -100,7 +100,7 @@ public class DikdortgenDamperConfig {
 								OzellikTipi.MONTAJ, List.of("Hava Kanalına Montaj", "Şaft Duvarı Üzerine Vidalı"),
 
 								OzellikTipi.AKSESUAR_TIPI,
-								List.of("Contalı", "Manuel Kollu", "Servo Motor 24V", "Servo Motor 230V",
+								List.of("Sigortalı", "Servo Motor 24V", "Servo Motor 230V",
 										"Limit Switch")),
 						// 🔥 ZORUNLU ÖLÇÜLER
 						List.of(OlcuAlanTipi.GENISLIK, OlcuAlanTipi.YUKSEKLIK)),
@@ -116,7 +116,7 @@ public class DikdortgenDamperConfig {
 								OzellikTipi.MONTAJ, List.of("Hava Kanalına Montaj", "Şaft Duvarı Üzerine Vidalı"),
 
 								OzellikTipi.AKSESUAR_TIPI,
-								List.of("Contalı", "Manuel Kollu", "Servo Motor 24V", "Servo Motor 230V",
+								List.of("Sigortalı", "Servo Motor 24V", "Servo Motor 230V",
 										"Limit Switch")), // 🔥 ZORUNLU ÖLÇÜLER
 						List.of(OlcuAlanTipi.GENISLIK, OlcuAlanTipi.YUKSEKLIK))
 

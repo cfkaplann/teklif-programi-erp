@@ -1,6 +1,8 @@
 package com.teklif.bootstrap;
 
 import javax.swing.SwingUtilities;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -13,8 +15,14 @@ import com.teklif.ui.MainFrame;
 
 public class AppStarter {
 
-    private static final String DB_PATH = "data/teklif.db";
-    private static final String DB_URL = "jdbc:sqlite:" + DB_PATH;
+	private static final String BASE =
+	        new File("").getAbsolutePath();
+
+	private static final String DB_PATH =
+	        BASE + "/data/teklif.db";
+
+	private static final String DB_URL =
+	        "jdbc:sqlite:" + DB_PATH;
 
     public static void main(String[] args) {
 
@@ -25,13 +33,17 @@ public class AppStarter {
             ensureDatabase();
             ensurePriceData();
 
+            System.out.println("🚀 UI açılıyor...");   // ⭐ EKLE
+
         } catch (Exception e) {
             e.printStackTrace();
             return;
         }
 
-        // UI her zaman en son açılır
         SwingUtilities.invokeLater(() -> {
+
+            System.out.println("🚀 MainFrame oluşturuluyor..."); // ⭐ EKLE
+
             new MainFrame().setVisible(true);
         });
     }
@@ -76,7 +88,8 @@ public class AppStarter {
             System.out.println("📊 Fiyat tabloları boş → Excel import başlıyor...");
 
             MasterExcelImporter importer = new MasterExcelImporter();
-            importer.importAll("HAM_FIYATLAR.xlsx");
+            String excelPath = resolveExcelPath();
+            importer.importAll(excelPath);
 
             System.out.println("✅ Excel import tamamlandı.");
 
@@ -85,5 +98,39 @@ public class AppStarter {
             System.out.println("✅ Fiyat tabloları zaten mevcut.");
         }
     }
+ // ======================================================
+ // ⭐ EXCEL YOLU BUL / KULLANICIYA SOR
+ // ======================================================
+ private static String resolveExcelPath(){
+
+	 String defaultPath =
+		        BASE + "/excel/HAM_FIYATLAR.xlsx";
+
+     File f = new File(defaultPath);
+
+     // ⭐ varsa direkt kullan
+     if(f.exists()){
+         return defaultPath;
+     }
+
+     // ⭐ yoksa kullanıcıdan iste
+     JOptionPane.showMessageDialog(
+             null,
+             "Fiyat Excel bulunamadı.\nLütfen HAM_FIYATLAR.xlsx dosyasını seçiniz.",
+             "Excel Gerekli",
+             JOptionPane.WARNING_MESSAGE
+     );
+
+     JFileChooser chooser = new JFileChooser();
+     chooser.setDialogTitle("HAM_FIYATLAR.xlsx seçiniz");
+
+     int result = chooser.showOpenDialog(null);
+
+     if(result == JFileChooser.APPROVE_OPTION){
+         return chooser.getSelectedFile().getAbsolutePath();
+     }
+
+     throw new RuntimeException("Excel seçilmedi → program devam edemez.");
+ }
 
 }
