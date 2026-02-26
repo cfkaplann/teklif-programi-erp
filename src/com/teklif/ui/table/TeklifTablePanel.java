@@ -89,17 +89,7 @@ public class TeklifTablePanel extends JPanel {
 					}
 				}
 
-				String symbol;
-				switch (paraBirimi) {
-				case EUR:
-					symbol = " €";
-					break;
-				case USD:
-					symbol = " $";
-					break;
-				default:
-					symbol = " ₺";
-				}
+				String symbol = paraBirimi.getSymbol();
 
 				double shown = KurService.cevir(v, paraBirimi); // ⭐ TL → Seçili para birimi
 
@@ -222,7 +212,7 @@ public class TeklifTablePanel extends JPanel {
 				// Şimdilik sabit TL gönderiyoruz.
 				// İstersen bunu sonradan Workspace'ten seçilen para birimini alacak şekilde
 				// yaparız.
-				ExcelExporter.export(table);
+				ExcelExporter.export(table, paraBirimi);
 
 			} catch (Exception ex) {
 				JOptionPane.showMessageDialog(this, "Excel aktarım hatası: " + ex.getMessage(), "Hata",
@@ -328,17 +318,7 @@ public class TeklifTablePanel extends JPanel {
 		double kdv = toplam * 0.20;
 		double dahil = toplam + kdv;
 
-		String symbol;
-		switch (paraBirimi) {
-		case EUR:
-			symbol = " €";
-			break;
-		case USD:
-			symbol = " $";
-			break;
-		default:
-			symbol = " ₺";
-		}
+		String symbol = paraBirimi.getSymbol();
 
 		double shownToplam = KurService.cevir(toplam, paraBirimi);
 		double shownKdv = KurService.cevir(kdv, paraBirimi);

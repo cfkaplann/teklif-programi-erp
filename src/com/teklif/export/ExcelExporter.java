@@ -34,7 +34,7 @@ public class ExcelExporter {
         return s.trim();
     }
 
-    public static void export(JTable table) {
+    public static void export(JTable table, com.teklif.model.ParaBirimi pb) {
 
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Excel Kaydet");
@@ -46,6 +46,14 @@ public class ExcelExporter {
         File file = chooser.getSelectedFile();
 
         try (Workbook workbook = new XSSFWorkbook()) {
+        	
+        	DataFormat df = workbook.createDataFormat();
+
+        	CellStyle moneyStyle = workbook.createCellStyle();
+        	moneyStyle.setDataFormat(df.getFormat(getExcelFormat(pb)));
+        	moneyStyle.setAlignment(HorizontalAlignment.RIGHT);
+        	
+        	
 
             Sheet sheet = workbook.createSheet("Teklif");
 
@@ -143,16 +151,9 @@ public class ExcelExporter {
 
                 Object val = model.getValueAt(r,14);
 
-                if(val == null) continue;
-
-                try{
-                    String temiz = val.toString()
-                            .replace("TL","")
-                            .replace(",",".")
-                            .trim();
-
-                    genelToplam += Double.parseDouble(temiz);
-                }catch(Exception ignore){}
+                if(val instanceof Number){
+                    genelToplam += ((Number)val).doubleValue();
+                }
             }
 
             double kdv = genelToplam * 0.20;
@@ -164,21 +165,34 @@ public class ExcelExporter {
             // sağa hizalamak için son kolon
             int lastCol = model.getColumnCount()-1;
 
-            // GENEL TOPLAM
+         // GENEL TOPLAM
             Row sumRow = sheet.createRow(summaryStart);
             sumRow.createCell(lastCol-1).setCellValue("GENEL TOPLAM");
-            sumRow.createCell(lastCol).setCellValue(genelToplam);
 
-            // KDV
-            Row kdvRow = sheet.createRow(summaryStart+1);
+            Row kdvRow   = sheet.createRow(summaryStart+1);
             kdvRow.createCell(lastCol-1).setCellValue("KDV %20");
-            kdvRow.createCell(lastCol).setCellValue(kdv);
 
-            // KDV DAHİL
             Row dahilRow = sheet.createRow(summaryStart+2);
             dahilRow.createCell(lastCol-1).setCellValue("KDV DAHİL GENEL");
-            dahilRow.createCell(lastCol).setCellValue(kdvDahil);
 
+            double shownGenel = com.teklif.pricing.KurService.cevir(genelToplam, pb);
+            double shownKdv   = com.teklif.pricing.KurService.cevir(kdv, pb);
+            double shownDahil = com.teklif.pricing.KurService.cevir(kdvDahil, pb);
+
+            Cell sumVal = sumRow.createCell(lastCol);
+            sumVal.setCellValue(shownGenel);
+            sumVal.setCellStyle(moneyStyle);
+
+            Cell kdvVal = kdvRow.createCell(lastCol);
+            kdvVal.setCellValue(shownKdv);
+            kdvVal.setCellStyle(moneyStyle);
+
+            Cell dahilVal = dahilRow.createCell(lastCol);
+            dahilVal.setCellValue(shownDahil);
+            dahilVal.setCellStyle(moneyStyle);
+
+
+           
             for(int i=0;i<model.getColumnCount();i++){
 
                 Cell cell = headerRow.createCell(i);
@@ -223,27 +237,43 @@ public class ExcelExporter {
                  // =====================================================
                  // ⭐ 1) GERÇEK NUMBER MI?
                  // =====================================================
-                 if(val instanceof Number){
+                    if(val instanceof Number){
 
-                     cell.setCellValue(((Number)val).doubleValue());
-                     yazildi = true;
-                 }
+                        double d = ((Number)val).doubleValue();
+
+                        // ⭐ Birim Fiyat ve Toplam Fiyat kolonları
+                        if(c == 13 || c == 14){
+                            d = com.teklif.pricing.KurService.cevir(d, pb);
+                            cell.setCellStyle(moneyStyle);
+                        }
+
+                        cell.setCellValue(d);
+                        yazildi = true;
+                    }
+                
 
                  // =====================================================
                  // ⭐ 2) STRING AMA SAYI OLABİLİR Mİ?
                  // =====================================================
-                 if(!yazildi && val != null){
+                    if(!yazildi && val != null){
 
-                     String raw = toExcelText(val)
-                             .replace(",",".")
-                             .trim();
+                        String raw = toExcelText(val)
+                                .replace(",",".")
+                                .trim();
 
-                     try{
-                         double d = Double.parseDouble(raw);
-                         cell.setCellValue(d);   // ⭐ Excel artık NUMBER
-                         yazildi = true;
-                     }catch(Exception ignore){}
-                 }
+                        try{
+                            double d = Double.parseDouble(raw);
+
+                            if(c == 13 || c == 14){
+                                d = com.teklif.pricing.KurService.cevir(d, pb);
+                                cell.setCellStyle(moneyStyle);
+                            }
+
+                            cell.setCellValue(d);
+                            yazildi = true;
+
+                        }catch(Exception ignore){}
+                    }
 
                  // =====================================================
                  // ⭐ 3) TEXT OLARAK YAZ
@@ -285,4 +315,23 @@ public class ExcelExporter {
             JOptionPane.showMessageDialog(null,"Excel hata: "+ex.getMessage());
         }
     }
+ // =====================================================
+ // ⭐ PARA FORMAT RESOLVER (ERP STYLE)
+ // =====================================================
+ private static String getExcelFormat(com.teklif.model.ParaBirimi pb){
+
+     if(pb == null) return "#,##0.00 \"TL\"";
+
+     switch(pb){
+
+         case EUR:
+             return "#,##0.00 \"EUR\"";
+
+         case USD:
+             return "#,##0.00 \"USD\"";
+
+         default:
+             return "#,##0.00 \"TL\"";
+     }
+ }
 }
