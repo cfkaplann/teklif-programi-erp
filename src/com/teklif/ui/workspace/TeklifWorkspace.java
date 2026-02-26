@@ -28,6 +28,7 @@ import com.teklif.ui.table.TeklifTablePanel;
 import com.teklif.controller.TeklifController;
 import com.teklif.pricing.dto.PricingResult;
 import com.teklif.ui.mapper.OzellikRequestMapper;
+import com.teklif.ui.resolver.GosterimKodResolver;
 
 public class TeklifWorkspace extends JPanel {
 
@@ -545,7 +546,7 @@ public class TeklifWorkspace extends JPanel {
 		        + ozellikSuffix
 		        + "</html>";
 		
-		Object[] row = { urunAdiGosterim, genislik, yukseklik, uzunluk, cap, cerceve, damper, ral, montaj, miktarStr,
+		Object[] row = { GosterimKodResolver.resolve(kart.getKod()), urunAdiGosterim, genislik, yukseklik, uzunluk, cap, cerceve, damper, ral, montaj, miktarStr,
 				"Adet", birimFiyat, toplamFiyat };
 
 		table.addRow(row);

@@ -141,7 +141,7 @@ public class ExcelExporter {
             // TOPLAM FİYAT kolonu index = 13
             for(int r=0; r<model.getRowCount(); r++){
 
-                Object val = model.getValueAt(r,13);
+                Object val = model.getValueAt(r,14);
 
                 if(val == null) continue;
 
@@ -216,20 +216,51 @@ public class ExcelExporter {
                 for(int c=0;c<model.getColumnCount();c++){
 
                     Object val = model.getValueAt(r,c);
-
                     Cell cell = row.createCell(c);
 
-                    String text = toExcelText(val);
+                    boolean yazildi = false;
 
-                    if(!text.isBlank()){
-                        cell.setCellValue(text);
-                    }
+                 // =====================================================
+                 // ⭐ 1) GERÇEK NUMBER MI?
+                 // =====================================================
+                 if(val instanceof Number){
 
-                    // yeni satır varsa wrap aç
-                    if(text.contains("\n")){
-                        cell.setCellStyle(wrapDataStyle);
-                        rowHasNewLine = true;
-                    }
+                     cell.setCellValue(((Number)val).doubleValue());
+                     yazildi = true;
+                 }
+
+                 // =====================================================
+                 // ⭐ 2) STRING AMA SAYI OLABİLİR Mİ?
+                 // =====================================================
+                 if(!yazildi && val != null){
+
+                     String raw = toExcelText(val)
+                             .replace(",",".")
+                             .trim();
+
+                     try{
+                         double d = Double.parseDouble(raw);
+                         cell.setCellValue(d);   // ⭐ Excel artık NUMBER
+                         yazildi = true;
+                     }catch(Exception ignore){}
+                 }
+
+                 // =====================================================
+                 // ⭐ 3) TEXT OLARAK YAZ
+                 // =====================================================
+                 if(!yazildi){
+
+                     String text = toExcelText(val);
+
+                     if(!text.isBlank()){
+                         cell.setCellValue(text);
+                     }
+
+                     if(text.contains("\n")){
+                         cell.setCellStyle(wrapDataStyle);
+                         rowHasNewLine = true;
+                     }
+                 }
                 }
 
                 // satırda yeni satır varsa yüksekliği arttır

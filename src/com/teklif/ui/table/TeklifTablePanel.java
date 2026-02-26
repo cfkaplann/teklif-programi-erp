@@ -28,7 +28,7 @@ public class TeklifTablePanel extends JPanel {
 
 		String[] kolonlar = {
 
-				"<html>SIRA<br>NO</html>", "<html>ÜRÜN ADI</html>",
+				"<html>SIRA<br>NO</html>", "<html>ÜRÜN KODU</html>", "<html>ÜRÜN ADI</html>",
 
 				"<html>YÜKSEKLİK<br>NET İÇ<hr>W(mm)</html>", "<html>GENİŞLİK<br>NET İÇ<hr>H(mm)</html>",
 				"<html>UZUNLUK<br>NET İÇ<hr>L(mm)</html>", "<html>ÇAP<br>NET İÇ<hr>Ø(mm)</html>",
@@ -53,14 +53,14 @@ public class TeklifTablePanel extends JPanel {
 
 		// ⭐ Ürün adı kolonunun genişliği değişince tekrar hesapla (kolon çekip
 		// büyüt-küçült)
-		table.getColumnModel().getColumn(1).addPropertyChangeListener(evt -> {
+		table.getColumnModel().getColumn(2).addPropertyChangeListener(evt -> {
 			if ("width".equals(evt.getPropertyName())) {
 				SwingUtilities.invokeLater(this::adjustAllRowHeights);
 			}
 		});
 
 		// ⭐ ÜRÜN ADI kolonu: satır kaydırma (wrap) renderer
-		table.getColumnModel().getColumn(1).setCellRenderer(new MultiLineTextRenderer());
+		table.getColumnModel().getColumn(2).setCellRenderer(new MultiLineTextRenderer());
 
 		// Daha iyi görünüm için minimum satır yüksekliği
 		table.setRowHeight(28);
@@ -126,29 +126,32 @@ public class TeklifTablePanel extends JPanel {
 		// SIRA NO
 		table.getColumnModel().getColumn(0).setPreferredWidth(45);
 
-		// ⭐ ÜRÜN ADI — GENİŞ
-		table.getColumnModel().getColumn(1).setPreferredWidth(360);
+		// ÜRÜN KODU
+		table.getColumnModel().getColumn(1).setPreferredWidth(110);
 
-		// ⭐ ÖLÇÜLER — DAR
-		table.getColumnModel().getColumn(2).setPreferredWidth(55);
-		table.getColumnModel().getColumn(3).setPreferredWidth(55);
-		table.getColumnModel().getColumn(4).setPreferredWidth(55);
-		table.getColumnModel().getColumn(5).setPreferredWidth(55);
+		// ÜRÜN ADI — GENİŞ
+		table.getColumnModel().getColumn(2).setPreferredWidth(360);
 
-		table.getColumnModel().getColumn(6).setPreferredWidth(95);
-		table.getColumnModel().getColumn(7).setPreferredWidth(95);
-		table.getColumnModel().getColumn(8).setPreferredWidth(90);
-		table.getColumnModel().getColumn(9).setPreferredWidth(90);
+		// ÖLÇÜLER — DAR
+		table.getColumnModel().getColumn(3).setPreferredWidth(55); // W
+		table.getColumnModel().getColumn(4).setPreferredWidth(55); // H
+		table.getColumnModel().getColumn(5).setPreferredWidth(55); // L
+		table.getColumnModel().getColumn(6).setPreferredWidth(55); // Ø
 
-		table.getColumnModel().getColumn(10).setPreferredWidth(70);
-		table.getColumnModel().getColumn(11).setPreferredWidth(70);
+		table.getColumnModel().getColumn(7).setPreferredWidth(95);  // Çerçeve
+		table.getColumnModel().getColumn(8).setPreferredWidth(95);  // Damper
+		table.getColumnModel().getColumn(9).setPreferredWidth(90);  // RAL
+		table.getColumnModel().getColumn(10).setPreferredWidth(90); // Montaj
 
-		table.getColumnModel().getColumn(12).setPreferredWidth(95);
-		table.getColumnModel().getColumn(13).setPreferredWidth(105);
+		table.getColumnModel().getColumn(11).setPreferredWidth(70); // Miktar
+		table.getColumnModel().getColumn(12).setPreferredWidth(70); // Birim
 
-		table.getColumnModel().getColumn(12).setCellRenderer(priceRenderer); // Birim Fiyat
-		table.getColumnModel().getColumn(13).setCellRenderer(priceRenderer); // Toplam Fiyat
+		table.getColumnModel().getColumn(13).setPreferredWidth(95);  // Birim Fiyat
+		table.getColumnModel().getColumn(14).setPreferredWidth(105); // Toplam Fiyat
 
+		table.getColumnModel().getColumn(13).setCellRenderer(priceRenderer); // Birim Fiyat
+		table.getColumnModel().getColumn(14).setCellRenderer(priceRenderer); // Toplam Fiyat
+		
 		JScrollPane scroll = new JScrollPane(table);
 		add(scroll, BorderLayout.CENTER);
 
@@ -257,7 +260,7 @@ public class TeklifTablePanel extends JPanel {
 		if (r == -1)
 			return;
 
-		Object col1 = model.getValueAt(r, 1);
+		Object col1 = model.getValueAt(r, 2);
 		String txt = (col1 == null) ? "" : col1.toString().trim();
 
 		model.removeRow(r);
@@ -274,7 +277,7 @@ public class TeklifTablePanel extends JPanel {
 
 		for (int i = 0; i < model.getRowCount(); i++) {
 
-			Object col1 = model.getValueAt(i, 1);
+			Object col1 = model.getValueAt(i, 2);
 			String txt = (col1 == null) ? "" : col1.toString().trim();
 
 			boolean isSummary = txt.equals("GENEL TOPLAM") || txt.equals("KDV %20") || txt.equals("KDV DAHİL GENEL");
@@ -309,7 +312,7 @@ public class TeklifTablePanel extends JPanel {
 
 		for (int i = 0; i < model.getRowCount(); i++) {
 
-			Object val = model.getValueAt(i, 13);
+			Object val = model.getValueAt(i, 14);
 
 			if (val == null)
 				continue;
@@ -364,7 +367,7 @@ public class TeklifTablePanel extends JPanel {
 	// =====================================================
 	private void adjustRowHeight(int row) {
 
-		int col = 1; // ÜRÜN ADI kolonu
+		int col = 2; // ÜRÜN ADI kolonu
 
 		TableCellRenderer renderer = table.getCellRenderer(row, col);
 		Component comp = table.prepareRenderer(renderer, row, col);
