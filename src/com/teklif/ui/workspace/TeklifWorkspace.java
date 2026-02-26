@@ -517,9 +517,30 @@ public class TeklifWorkspace extends JPanel {
 			}
 		}
 
+		// =====================================================
+		// ⭐ SLOT ise ürün adının başına: "{slot} Yarıklı " ekle
+		// =====================================================
+		String anaAd = kart.getAd();
+
+		if (kart.getKod() != null && kart.getKod().startsWith("SLT")) {
+
+		    String slotSayisi = "";
+
+		    for (OlcuComponent c : olcuComponents) {
+		        if (c.getTip() == OlcuAlanTipi.SLOT_SAYISI) {
+		            slotSayisi = c.getValue();
+		            break;
+		        }
+		    }
+
+		    if (slotSayisi != null && !slotSayisi.isBlank()) {
+		        anaAd = slotSayisi + " Yarıklı " + anaAd;
+		    }
+		}
+		
 		String urunAdiGosterim =
 		        "<html>"
-		        + kart.getAd()
+		        + anaAd
 		        + buildUrunAdiOlcuEki()
 		        + ozellikSuffix
 		        + "</html>";

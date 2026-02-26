@@ -2,19 +2,19 @@ package com.teklif.db;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import com.teklif.system.AppPathManager;
 
 public class ConnectionManager {
-
-    private static final String BASE =
-            new java.io.File("").getAbsolutePath();
 
     public static Connection getConnection() throws Exception {
 
         Class.forName("org.sqlite.JDBC");
 
-        String dbPath = BASE + "/data/teklif.db";
+        String dbPath =
+                AppPathManager.getDatabaseFile().getAbsolutePath();
+
+        System.out.println("DB PATH = " + dbPath);
 
         return DriverManager.getConnection("jdbc:sqlite:" + dbPath);
     }
-
 }

@@ -5,6 +5,9 @@ import com.teklif.export.ExcelExporter;
 import com.teklif.model.ParaBirimi;
 import com.teklif.pricing.KurService;
 
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
+
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -44,45 +47,67 @@ public class TeklifTablePanel extends JPanel {
 		};
 
 		table = new JTable(model);
-		
+
+		// ⭐ Model değişince (satır ekleme/güncelleme) tüm satır yüksekliklerini ayarla
+		model.addTableModelListener(e -> SwingUtilities.invokeLater(this::adjustAllRowHeights));
+
+		// ⭐ Ürün adı kolonunun genişliği değişince tekrar hesapla (kolon çekip
+		// büyüt-küçült)
+		table.getColumnModel().getColumn(1).addPropertyChangeListener(evt -> {
+			if ("width".equals(evt.getPropertyName())) {
+				SwingUtilities.invokeLater(this::adjustAllRowHeights);
+			}
+		});
+
+		// ⭐ ÜRÜN ADI kolonu: satır kaydırma (wrap) renderer
+		table.getColumnModel().getColumn(1).setCellRenderer(new MultiLineTextRenderer());
+
+		// Daha iyi görünüm için minimum satır yüksekliği
+		table.setRowHeight(28);
+
 		DefaultTableCellRenderer priceRenderer = new DefaultTableCellRenderer() {
 
-		    @Override
-		    protected void setValue(Object value) {
+			@Override
+			protected void setValue(Object value) {
 
-		        if (value == null) {
-		            setText("");
-		            return;
-		        }
+				if (value == null) {
+					setText("");
+					return;
+				}
 
-		        double v;
+				double v;
 
-		        // model bazen Double, bazen String atayabilir → ikisini de yakala
-		        if (value instanceof Number) {
-		            v = ((Number) value).doubleValue();
-		        } else {
-		            try {
-		                v = Double.parseDouble(value.toString());
-		            } catch (Exception ex) {
-		                super.setValue(value);
-		                return;
-		            }
-		        }
+				// model bazen Double, bazen String atayabilir → ikisini de yakala
+				if (value instanceof Number) {
+					v = ((Number) value).doubleValue();
+				} else {
+					try {
+						v = Double.parseDouble(value.toString());
+					} catch (Exception ex) {
+						super.setValue(value);
+						return;
+					}
+				}
 
-		        String symbol;
-		        switch (paraBirimi) {
-		            case EUR: symbol = " €"; break;
-		            case USD: symbol = " $"; break;
-		            default:  symbol = " ₺";
-		        }
+				String symbol;
+				switch (paraBirimi) {
+				case EUR:
+					symbol = " €";
+					break;
+				case USD:
+					symbol = " $";
+					break;
+				default:
+					symbol = " ₺";
+				}
 
-		        double shown = KurService.cevir(v, paraBirimi); // ⭐ TL → Seçili para birimi
+				double shown = KurService.cevir(v, paraBirimi); // ⭐ TL → Seçili para birimi
 
-		        setHorizontalAlignment(SwingConstants.RIGHT);
-		        setText(String.format("%.2f%s", shown, symbol));
-		    }
+				setHorizontalAlignment(SwingConstants.RIGHT);
+				setText(String.format("%.2f%s", shown, symbol));
+			}
 		};
-		
+
 		// =====================================================
 		// ⭐ FIT MODE (panel içine sığdır)
 		// =====================================================
@@ -120,7 +145,7 @@ public class TeklifTablePanel extends JPanel {
 
 		table.getColumnModel().getColumn(12).setPreferredWidth(95);
 		table.getColumnModel().getColumn(13).setPreferredWidth(105);
-		
+
 		table.getColumnModel().getColumn(12).setCellRenderer(priceRenderer); // Birim Fiyat
 		table.getColumnModel().getColumn(13).setCellRenderer(priceRenderer); // Toplam Fiyat
 
@@ -136,7 +161,7 @@ public class TeklifTablePanel extends JPanel {
 		Font normalFont = new Font("Segoe UI", Font.PLAIN, 13);
 		Font boldFont = new Font("Segoe UI", Font.BOLD, 14);
 		Font totalFont = new Font("Segoe UI", Font.BOLD, 16);
-		
+
 		// ---------------------
 		// TOPLAM PANEL
 		// ---------------------
@@ -155,7 +180,7 @@ public class TeklifTablePanel extends JPanel {
 		lblGenel.setHorizontalAlignment(SwingConstants.RIGHT);
 		lblKdv.setHorizontalAlignment(SwingConstants.RIGHT);
 		lblKdvDahil.setHorizontalAlignment(SwingConstants.RIGHT);
-		
+
 		lblGenelText.setFont(normalFont);
 		lblKdvText.setFont(normalFont);
 		lblKdvDahilText.setFont(boldFont);
@@ -168,7 +193,7 @@ public class TeklifTablePanel extends JPanel {
 		toplamPanel.add(createRow(lblKdvText, lblKdv));
 
 		JSeparator line = new JSeparator();
-		line.setMaximumSize(new Dimension(240,1));
+		line.setMaximumSize(new Dimension(240, 1));
 		toplamPanel.add(line);
 
 		toplamPanel.add(createRow(lblKdvDahilText, lblKdvDahil));
@@ -218,9 +243,9 @@ public class TeklifTablePanel extends JPanel {
 		}
 
 		model.addRow(row);
-		
-		adjustRowHeight(model.getRowCount()-1);
-		
+
+		adjustAllRowHeights();
+
 		hesaplaToplamPanel();
 
 	}
@@ -264,18 +289,15 @@ public class TeklifTablePanel extends JPanel {
 			}
 		}
 	}
-	
-	
-	
-	    public void setParaBirimi(ParaBirimi pb){
-	        this.paraBirimi = (pb == null) ? ParaBirimi.TL : pb;
 
-	        model.fireTableDataChanged(); // ⭐ renderer tekrar çalışır
-	        table.repaint();
+	public void setParaBirimi(ParaBirimi pb) {
+		this.paraBirimi = (pb == null) ? ParaBirimi.TL : pb;
 
-	        hesaplaToplamPanel();
-	    }
-	
+		model.fireTableDataChanged(); // ⭐ renderer tekrar çalışır
+		table.repaint();
+
+		hesaplaToplamPanel();
+	}
 
 	public JTable getTable() {
 		return table;
@@ -293,8 +315,8 @@ public class TeklifTablePanel extends JPanel {
 				continue;
 
 			try {
-				if(val instanceof Number){
-				    toplam += ((Number)val).doubleValue();
+				if (val instanceof Number) {
+					toplam += ((Number) val).doubleValue();
 				}
 			} catch (Exception ignore) {
 			}
@@ -305,9 +327,14 @@ public class TeklifTablePanel extends JPanel {
 
 		String symbol;
 		switch (paraBirimi) {
-		    case EUR: symbol = " €"; break;
-		    case USD: symbol = " $"; break;
-		    default:  symbol = " ₺";
+		case EUR:
+			symbol = " €";
+			break;
+		case USD:
+			symbol = " $";
+			break;
+		default:
+			symbol = " ₺";
 		}
 
 		double shownToplam = KurService.cevir(toplam, paraBirimi);
@@ -318,34 +345,95 @@ public class TeklifTablePanel extends JPanel {
 		lblKdv.setText(String.format("%.2f%s", shownKdv, symbol));
 		lblKdvDahil.setText(String.format("%.2f%s", shownDahil, symbol));
 	}
-	
-	private JPanel createRow(JLabel left, JLabel right){
 
-	    JPanel row = new JPanel(new BorderLayout());
-	    row.setMaximumSize(new Dimension(260,25));
+	private JPanel createRow(JLabel left, JLabel right) {
 
-	    left.setBorder(BorderFactory.createEmptyBorder(0,0,0,10));
+		JPanel row = new JPanel(new BorderLayout());
+		row.setMaximumSize(new Dimension(260, 25));
 
-	    row.add(left,BorderLayout.WEST);
-	    row.add(right,BorderLayout.EAST);
+		left.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
 
-	    return row;
+		row.add(left, BorderLayout.WEST);
+		row.add(right, BorderLayout.EAST);
+
+		return row;
 	}
-	
+
 	// =====================================================
 	// ⭐ HTML içeriğe göre satır yüksekliği ayarla
 	// =====================================================
-	private void adjustRowHeight(int row){
+	private void adjustRowHeight(int row) {
 
-	    int column = 1; // ÜRÜN ADI kolonu
+		int col = 1; // ÜRÜN ADI kolonu
 
-	    TableCellRenderer renderer = table.getCellRenderer(row, column);
-	    Component comp = table.prepareRenderer(renderer, row, column);
+		TableCellRenderer renderer = table.getCellRenderer(row, col);
+		Component comp = table.prepareRenderer(renderer, row, col);
 
-	    int preferredHeight = comp.getPreferredSize().height;
+		int width = table.getColumnModel().getColumn(col).getWidth();
 
-	    if(table.getRowHeight(row) != preferredHeight){
-	        table.setRowHeight(row, preferredHeight);
-	    }
+		// ⭐ Kritik: JTextArea'nın yüksekliği doğru hesaplaması için genişliği set et
+		if (comp instanceof JTextArea) {
+			((JTextArea) comp).setSize(width, Short.MAX_VALUE);
+		} else {
+			comp.setSize(width, Short.MAX_VALUE);
+		}
+
+		int prefH = comp.getPreferredSize().height;
+
+		// küçük bir pay + min yükseklik
+		int finalH = Math.max(28, prefH + 2);
+
+		if (table.getRowHeight(row) != finalH) {
+			table.setRowHeight(row, finalH);
+		}
+	}
+
+	// =====================================================
+	// ⭐ ÜRÜN ADI için çok satırlı renderer (wrap)
+	// =====================================================
+	private class MultiLineTextRenderer extends JTextArea implements TableCellRenderer {
+
+		public MultiLineTextRenderer() {
+			setLineWrap(true);
+			setWrapStyleWord(true);
+			setOpaque(true);
+			setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6)); // iç boşluk
+		}
+
+		@Override
+		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
+				int row, int column) {
+
+			String text = (value == null) ? "" : value.toString();
+
+			// Eğer <html> / <br> vb. geliyorsa normal yazıya çevir
+			text = text.replaceAll("(?i)<br\\s*/?>", "\n").replaceAll("(?i)</html>", "").replaceAll("(?i)<html>", "")
+					.replaceAll("(?i)<hr\\s*/?>", "\n").replaceAll("(?i)<[^>]+>", ""); // diğer tag’leri temizle
+
+			setText(text);
+
+			// font/renk seçimi JTable ile uyumlu
+			setFont(table.getFont());
+
+			if (isSelected) {
+				setForeground(table.getSelectionForeground());
+				setBackground(table.getSelectionBackground());
+			} else {
+				setForeground(table.getForeground());
+				setBackground(table.getBackground());
+			}
+
+			// ⭐ Kritik: yüksekliği doğru hesaplamak için kolon genişliğini veriyoruz
+			int colWidth = table.getColumnModel().getColumn(column).getWidth();
+			setSize(new Dimension(colWidth, Short.MAX_VALUE));
+
+			return this;
+		}
+	}
+
+	private void adjustAllRowHeights() {
+		for (int r = 0; r < table.getRowCount(); r++) {
+			adjustRowHeight(r);
+		}
 	}
 }

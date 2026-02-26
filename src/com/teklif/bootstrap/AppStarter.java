@@ -5,132 +5,113 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import java.io.File;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
+import com.teklif.db.ConnectionManager;
 import com.teklif.db.SchemaInitializer;
 import com.teklif.importer.MasterExcelImporter;
 import com.teklif.ui.MainFrame;
 
 public class AppStarter {
 
-	private static final String BASE =
-	        new File("").getAbsolutePath();
+// ⭐ Programın çalıştığı klasör (Eclipse / MSI / EXE fark etmez)
+	private static final String BASE = System.getProperty("user.dir");
 
-	private static final String DB_PATH =
-	        BASE + "/data/teklif.db";
+	public static void main(String[] args) {
 
-	private static final String DB_URL =
-	        "jdbc:sqlite:" + DB_PATH;
+		try {
 
-    public static void main(String[] args) {
+			System.out.println("🚀 AppStarter başladı...");
 
-        try {
+			ensureDatabase();
+			ensurePriceData();
 
-            System.out.println("🚀 AppStarter başladı...");
+			System.out.println("🚀 UI açılıyor...");
+			System.out.println(
+				    AppStarter.class.getResource("/HAM_FIYATLAR.xlsx")
+				);
 
-            ensureDatabase();
-            ensurePriceData();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return;
+		}
 
-            System.out.println("🚀 UI açılıyor...");   // ⭐ EKLE
+		SwingUtilities.invokeLater(() -> {
 
-        } catch (Exception e) {
-            e.printStackTrace();
-            return;
-        }
+			System.out.println("🚀 MainFrame oluşturuluyor...");
+			new MainFrame().setVisible(true);
+		});
+	}
 
-        SwingUtilities.invokeLater(() -> {
+// ======================================================
+// ⭐ DB VAR MI? YOKSA OLUŞTUR
+// ======================================================
+	private static void ensureDatabase() throws Exception {
 
-            System.out.println("🚀 MainFrame oluşturuluyor..."); // ⭐ EKLE
+		File dbFile = com.teklif.system.AppPathManager.getDatabaseFile();
 
-            new MainFrame().setVisible(true);
-        });
-    }
+		if (!dbFile.exists()) {
 
-    // ======================================================
-    // ⭐ DB VAR MI? YOKSA OLUŞTUR
-    // ======================================================
-    private static void ensureDatabase() throws Exception {
+			System.out.println("📦 DB bulunamadı → Schema oluşturuluyor...");
+			SchemaInitializer.init();
 
-        File dbFile = new File(DB_PATH);
+		} else {
 
-        if (!dbFile.exists()) {
+			System.out.println("✅ DB mevcut.");
+		}
+	}
 
-            System.out.println("📦 DB bulunamadı → Schema oluşturuluyor...");
-            SchemaInitializer.init();
+// ======================================================
+// ⭐ FİYAT TABLOLARI VAR MI? YOKSA IMPORT ET
+// ======================================================
+	private static void ensurePriceData() throws Exception {
 
-        } else {
+		boolean empty = false;
 
-            System.out.println("✅ DB mevcut.");
+		// ⭐ ConnectionManager kullanıyoruz
+		try (Connection conn = ConnectionManager.getConnection();
+				PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) FROM price_table");
+				ResultSet rs = ps.executeQuery()) {
 
-        }
-    }
+			empty = rs.getInt(1) == 0;
+		}
 
-    // ======================================================
-    // ⭐ FİYAT TABLOLARI VAR MI? YOKSA IMPORT ET
-    // ======================================================
-    private static void ensurePriceData() throws Exception {
+		if (empty) {
 
-        boolean empty = false;
+			System.out.println("📊 Fiyat tabloları boş → Excel import başlıyor...");
 
-        // ⭐ SADECE KONTROL İÇİN CONNECTION AÇ
-        try (Connection conn = DriverManager.getConnection(DB_URL);
-             PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) FROM price_table");
-             ResultSet rs = ps.executeQuery()) {
+			MasterExcelImporter importer = new MasterExcelImporter();
+			String excelPath = extractExcelFromResource();
+			importer.importAll(excelPath);
 
-            empty = rs.getInt(1) == 0;
-        } // ⭐ BURADA CONNECTION KAPANDI (ÇOK ÖNEMLİ)
+			System.out.println("✅ Excel import tamamlandı.");
 
-        // ⭐ IMPORT ARTIK AYRI ÇALIŞIYOR
-        if (empty) {
+		} else {
 
-            System.out.println("📊 Fiyat tabloları boş → Excel import başlıyor...");
+			System.out.println("✅ Fiyat tabloları zaten mevcut.");
+		}
+	}
 
-            MasterExcelImporter importer = new MasterExcelImporter();
-            String excelPath = resolveExcelPath();
-            importer.importAll(excelPath);
 
-            System.out.println("✅ Excel import tamamlandı.");
 
-        } else {
+	private static String extractExcelFromResource() throws Exception {
 
-            System.out.println("✅ Fiyat tabloları zaten mevcut.");
-        }
-    }
- // ======================================================
- // ⭐ EXCEL YOLU BUL / KULLANICIYA SOR
- // ======================================================
- private static String resolveExcelPath(){
+		java.io.InputStream is = AppStarter.class.getResourceAsStream("/HAM_FIYATLAR.xlsx");
 
-	 String defaultPath =
-		        BASE + "/excel/HAM_FIYATLAR.xlsx";
+		if (is == null) {
+			throw new RuntimeException("Excel resource bulunamadı!");
+		}
 
-     File f = new File(defaultPath);
+		File temp = File.createTempFile("HAM_FIYATLAR", ".xlsx");
 
-     // ⭐ varsa direkt kullan
-     if(f.exists()){
-         return defaultPath;
-     }
+		temp.deleteOnExit();
 
-     // ⭐ yoksa kullanıcıdan iste
-     JOptionPane.showMessageDialog(
-             null,
-             "Fiyat Excel bulunamadı.\nLütfen HAM_FIYATLAR.xlsx dosyasını seçiniz.",
-             "Excel Gerekli",
-             JOptionPane.WARNING_MESSAGE
-     );
+		java.nio.file.Files.copy(is, temp.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 
-     JFileChooser chooser = new JFileChooser();
-     chooser.setDialogTitle("HAM_FIYATLAR.xlsx seçiniz");
+		System.out.println("EXCEL TEMP = " + temp.getAbsolutePath());
 
-     int result = chooser.showOpenDialog(null);
-
-     if(result == JFileChooser.APPROVE_OPTION){
-         return chooser.getSelectedFile().getAbsolutePath();
-     }
-
-     throw new RuntimeException("Excel seçilmedi → program devam edemez.");
- }
+		return temp.getAbsolutePath();
+	}
 
 }
