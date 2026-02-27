@@ -4,40 +4,39 @@ import javax.swing.*;
 import javax.swing.table.TableModel;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class ExcelExporter {
 
-    // =====================================================
-    // ⭐ HTML -> EXCEL TEXT (br -> \n, tag temizleme)
-    // =====================================================
-    private static String toExcelText(Object value){
-        if(value == null) return "";
+    private static final String TEMPLATE_PATH = "/teklif_sablon.xlsx";
+    private static final String SHEET_NAME = "Teklif";
 
+    private static final int TEMPLATE_DATA_ROW_INDEX = 25; // Excel 26. satır
+
+    // JTable kolon index -> Excel kolon index
+    private static final int[] COL_MAP = {
+            1, 2, 3, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
+    };
+
+    private static String toExcelText(Object value) {
+        if (value == null) return "";
         String s = value.toString();
 
-        // HTML kullanıyorsan (JTable için)
-        if(s.toLowerCase().startsWith("<html>")){
-            // <br> / <hr> -> yeni satır
+        if (s.toLowerCase().startsWith("<html>")) {
             s = s.replaceAll("(?i)<br\\s*/?>", "\n");
             s = s.replaceAll("(?i)<hr\\s*/?>", "\n");
-
-            // tüm html taglerini sil
             s = s.replaceAll("<[^>]*>", "");
         }
 
-        // normalde de <br> gelebilir diye (garanti)
-        s = s.replace("<br>", "\n").replace("<hr>", "\n");
-
-        return s.trim();
+        return s.replace("<br>", "\n").replace("<hr>", "\n").trim();
     }
 
     public static void export(JTable table, com.teklif.model.ParaBirimi pb) {
 
         JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Excel Kaydet");
         chooser.setSelectedFile(new File("teklif.xlsx"));
 
         if (chooser.showSaveDialog(null) != JFileChooser.APPROVE_OPTION)
@@ -45,293 +44,210 @@ public class ExcelExporter {
 
         File file = chooser.getSelectedFile();
 
-        try (Workbook workbook = new XSSFWorkbook()) {
-        	
-        	DataFormat df = workbook.createDataFormat();
+        InputStream is = ExcelExporter.class.getResourceAsStream(TEMPLATE_PATH);
+        if (is == null) {
+            JOptionPane.showMessageDialog(null, "Şablon bulunamadı!");
+            return;
+        }
 
-        	CellStyle moneyStyle = workbook.createCellStyle();
-        	moneyStyle.setDataFormat(df.getFormat(getExcelFormat(pb)));
-        	moneyStyle.setAlignment(HorizontalAlignment.RIGHT);
-        	
-        	
+        TableModel model = table.getModel();
 
-            Sheet sheet = workbook.createSheet("Teklif");
+        try (Workbook workbook = new XSSFWorkbook(is)) {
 
-            // =====================================================
-            // ⭐ NEF TEKNİK HEADER BLOĞU
-            // =====================================================
-
-            // FONTLAR
-            Font boldFont = workbook.createFont();
-            boldFont.setBold(true);
-            boldFont.setFontHeightInPoints((short)10);
-
-            Font titleFont = workbook.createFont();
-            titleFont.setBold(true);
-            titleFont.setFontHeightInPoints((short)14);
-
-            // STYLE
-            CellStyle center = workbook.createCellStyle();
-            center.setAlignment(HorizontalAlignment.CENTER);
-            center.setVerticalAlignment(VerticalAlignment.CENTER);
-
-            CellStyle boldLeft = workbook.createCellStyle();
-            boldLeft.setFont(boldFont);
-
-            // =====================================================
-            // SOL ÜST BLOK
-            // =====================================================
-            Row r0 = sheet.createRow(0);
-            sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(0,2,0,4));
-
-            Cell c00 = r0.createCell(0);
-            c00.setCellValue("NEF TEKNİK HAVALANDIRMA İNŞAAT SAN. VE TİC.LTD.ŞTİ.");
-            c00.setCellStyle(boldLeft);
-
-            // =====================================================
-            // ORTA LOGO ALANI
-            // =====================================================
-            sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(0,2,5,9));
-
-            Row r1 = sheet.createRow(1);
-            Cell logo = r1.createCell(5);
-            logo.setCellValue("N E F   T E K N İ K");
-            logo.setCellStyle(center);
-
-            // =====================================================
-            // SAĞ ÜST BLOK
-            // =====================================================
-            sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(0,2,10,13));
-
-            Cell doc = r0.createCell(10);
-            doc.setCellValue("DOKÜMAN : NEF-FORM.1");
-
-            // =====================================================
-            // TEKLİF FORMU BAŞLIK
-            // =====================================================
-            sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(3,3,0,13));
-
-            Row r3 = sheet.createRow(3);
-            Cell teklif = r3.createCell(0);
-            teklif.setCellValue("TEKLİF FORMU");
-            teklif.setCellStyle(center);
-
-            TableModel model = table.getModel();
-
-            // =====================================
-            // HEADER
-            // =====================================
-
-            // =====================================
-            // ⭐ MULTI LINE HEADER (ERP STYLE)
-            // =====================================
-
-            // header font
-            Font headerFont = workbook.createFont();
-            headerFont.setBold(true);
-
-            // header style
-            CellStyle headerStyle = workbook.createCellStyle();
-            headerStyle.setFont(headerFont);
-            headerStyle.setAlignment(HorizontalAlignment.CENTER);
-            headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
-            headerStyle.setWrapText(true);
-
-            int tableStartRow = 6;   // ⭐ tablo artık aşağıdan başlıyor
-            Row headerRow = sheet.createRow(tableStartRow);
-
-            // =====================================================
-            // ⭐ GENEL TOPLAM / KDV / KDV DAHİL
-            // =====================================================
-
-            double genelToplam = 0;
-
-            // TOPLAM FİYAT kolonu index = 13
-            for(int r=0; r<model.getRowCount(); r++){
-
-                Object val = model.getValueAt(r,14);
-
-                if(val instanceof Number){
-                    genelToplam += ((Number)val).doubleValue();
-                }
+            Sheet sheet = workbook.getSheet(SHEET_NAME);
+            if (sheet == null) {
+                JOptionPane.showMessageDialog(null, "Sheet bulunamadı!");
+                return;
             }
 
-            double kdv = genelToplam * 0.20;
-            double kdvDahil = genelToplam + kdv;
-
-            // tablo bitiş satırı
-            int summaryStart = tableStartRow + 1 + model.getRowCount() + 2;
-
-            // sağa hizalamak için son kolon
-            int lastCol = model.getColumnCount()-1;
-
-         // GENEL TOPLAM
-            Row sumRow = sheet.createRow(summaryStart);
-            sumRow.createCell(lastCol-1).setCellValue("GENEL TOPLAM");
-
-            Row kdvRow   = sheet.createRow(summaryStart+1);
-            kdvRow.createCell(lastCol-1).setCellValue("KDV %20");
-
-            Row dahilRow = sheet.createRow(summaryStart+2);
-            dahilRow.createCell(lastCol-1).setCellValue("KDV DAHİL GENEL");
-
-            double shownGenel = com.teklif.pricing.KurService.cevir(genelToplam, pb);
-            double shownKdv   = com.teklif.pricing.KurService.cevir(kdv, pb);
-            double shownDahil = com.teklif.pricing.KurService.cevir(kdvDahil, pb);
-
-            Cell sumVal = sumRow.createCell(lastCol);
-            sumVal.setCellValue(shownGenel);
-            sumVal.setCellStyle(moneyStyle);
-
-            Cell kdvVal = kdvRow.createCell(lastCol);
-            kdvVal.setCellValue(shownKdv);
-            kdvVal.setCellStyle(moneyStyle);
-
-            Cell dahilVal = dahilRow.createCell(lastCol);
-            dahilVal.setCellValue(shownDahil);
-            dahilVal.setCellStyle(moneyStyle);
-
-
-           
-            for(int i=0;i<model.getColumnCount();i++){
-
-                Cell cell = headerRow.createCell(i);
-
-                String header = model.getColumnName(i);
-
-                // HTML temizleme
-                header = header.replace("<html>", "")
-                        .replace("</html>", "")
-                        .replace("<hr>", "\n")
-                        .replace("<br>", "\n");
-
-                cell.setCellValue(header);
-                cell.setCellStyle(headerStyle);
+            Row templateRow = sheet.getRow(TEMPLATE_DATA_ROW_INDEX);
+            if (templateRow == null) {
+                JOptionPane.showMessageDialog(null, "Template veri satırı yok!");
+                return;
             }
 
-            // header yüksekliği (3 satır için)
-            headerRow.setHeightInPoints(55);
+            DataFormat df = workbook.createDataFormat();
 
-            // =====================================
-            // DATA
-            // =====================================
+            // ==========================
+            // PARA STYLE (T ve U ayrı)
+            // ==========================
+            CellStyle templateT = templateRow.getCell(19).getCellStyle();
+            CellStyle templateU = templateRow.getCell(20).getCellStyle();
 
-            // ⭐ wrap style (data için)
-            CellStyle wrapDataStyle = workbook.createCellStyle();
-            wrapDataStyle.setWrapText(true);
-            wrapDataStyle.setVerticalAlignment(VerticalAlignment.TOP);
+            CellStyle moneyStyleT = workbook.createCellStyle();
+            moneyStyleT.cloneStyleFrom(templateT);
+            moneyStyleT.setDataFormat(df.getFormat(getExcelFormat(pb)));
 
-            for(int r=0;r<model.getRowCount();r++){
+            CellStyle moneyStyleU = workbook.createCellStyle();
+            moneyStyleU.cloneStyleFrom(templateU);
+            moneyStyleU.setDataFormat(df.getFormat(getExcelFormat(pb)));
 
-                Row row = sheet.createRow(tableStartRow + 1 + r);
+            // ==========================
+            // WRAP STYLE (ürün adı için)
+            // ==========================
+            CellStyle templateText = templateRow.getCell(3).getCellStyle();
 
-                boolean rowHasNewLine = false;
+            CellStyle wrapStyle = workbook.createCellStyle();
+            wrapStyle.cloneStyleFrom(templateText);
+            wrapStyle.setWrapText(true);
 
-                for(int c=0;c<model.getColumnCount();c++){
+            int dataStartRow = TEMPLATE_DATA_ROW_INDEX;
 
-                    Object val = model.getValueAt(r,c);
-                    Cell cell = row.createCell(c);
+            // ==========================
+            // DATA SATIRLARI
+            // ==========================
+            for (int r = 0; r < model.getRowCount(); r++) {
 
-                    boolean yazildi = false;
+                int excelRowIndex = dataStartRow + r;
 
-                 // =====================================================
-                 // ⭐ 1) GERÇEK NUMBER MI?
-                 // =====================================================
-                    if(val instanceof Number){
+                Row row = sheet.getRow(excelRowIndex);
+                if (row == null) row = sheet.createRow(excelRowIndex);
 
-                        double d = ((Number)val).doubleValue();
+                copyRowStyle(templateRow, row, 0, 21);
 
-                        // ⭐ Birim Fiyat ve Toplam Fiyat kolonları
-                        if(c == 13 || c == 14){
+                for (int c = 0; c < model.getColumnCount(); c++) {
+
+                    int targetCol = COL_MAP[c];
+                    Cell cell = row.getCell(targetCol);
+                    if (cell == null) cell = row.createCell(targetCol);
+
+                    Object val = model.getValueAt(r, c);
+                    boolean written = false;
+
+                    if (val instanceof Number) {
+
+                        double d = ((Number) val).doubleValue();
+
+                        if (c == 13 || c == 14) {
+
                             d = com.teklif.pricing.KurService.cevir(d, pb);
-                            cell.setCellStyle(moneyStyle);
+
+                            if (c == 14) { // Toplam Fiyat T:U
+                                cell.setCellStyle(moneyStyleT);
+
+                                Cell uCell = row.getCell(20);
+                                if (uCell == null) uCell = row.createCell(20);
+                                uCell.setCellStyle(moneyStyleU);
+                            } else {
+                                cell.setCellStyle(moneyStyleT);
+                            }
                         }
 
                         cell.setCellValue(d);
-                        yazildi = true;
+                        written = true;
                     }
-                
 
-                 // =====================================================
-                 // ⭐ 2) STRING AMA SAYI OLABİLİR Mİ?
-                 // =====================================================
-                    if(!yazildi && val != null){
+                    if (!written && val != null) {
 
-                        String raw = toExcelText(val)
-                                .replace(",",".")
-                                .trim();
+                        String raw = toExcelText(val).replace(",", ".").trim();
 
-                        try{
+                        try {
                             double d = Double.parseDouble(raw);
 
-                            if(c == 13 || c == 14){
+                            if (c == 13 || c == 14) {
+
                                 d = com.teklif.pricing.KurService.cevir(d, pb);
-                                cell.setCellStyle(moneyStyle);
+
+                                if (c == 14) {
+                                    cell.setCellStyle(moneyStyleT);
+
+                                    Cell uCell = row.getCell(20);
+                                    if (uCell == null) uCell = row.createCell(20);
+                                    uCell.setCellStyle(moneyStyleU);
+                                } else {
+                                    cell.setCellStyle(moneyStyleT);
+                                }
                             }
 
                             cell.setCellValue(d);
-                            yazildi = true;
+                            written = true;
 
-                        }catch(Exception ignore){}
+                        } catch (Exception ignore) {}
                     }
 
-                 // =====================================================
-                 // ⭐ 3) TEXT OLARAK YAZ
-                 // =====================================================
-                 if(!yazildi){
+                    if (!written) {
 
-                     String text = toExcelText(val);
+                        String text = toExcelText(val);
+                        if (!text.isBlank()) cell.setCellValue(text);
 
-                     if(!text.isBlank()){
-                         cell.setCellValue(text);
-                     }
-
-                     if(text.contains("\n")){
-                         cell.setCellStyle(wrapDataStyle);
-                         rowHasNewLine = true;
-                     }
-                 }
-                }
-
-                // satırda yeni satır varsa yüksekliği arttır
-                if(rowHasNewLine){
-                    row.setHeightInPoints(35);
+                        if (text.contains("\n")) {
+                            cell.setCellStyle(wrapStyle);
+                        }
+                    }
                 }
             }
 
-            // AUTO SIZE
-            for(int i=0;i<model.getColumnCount();i++){
-                sheet.autoSizeColumn(i);
-                sheet.setColumnWidth(i, sheet.getColumnWidth(i) + 1200);
+            // ==========================
+            // SUMMARY
+            // ==========================
+            double genelTL = 0;
+            for (int r = 0; r < model.getRowCount(); r++) {
+                Object v = model.getValueAt(r, 14);
+                if (v instanceof Number)
+                    genelTL += ((Number) v).doubleValue();
             }
 
-            try(FileOutputStream fos = new FileOutputStream(file)){
+            double kdvTL = genelTL * 0.20;
+            double dahilTL = genelTL + kdvTL;
+
+            writeSummary(sheet, 44, 19,
+                    com.teklif.pricing.KurService.cevir(genelTL, pb),
+                    moneyStyleT, moneyStyleU);
+
+            writeSummary(sheet, 45, 19,
+                    com.teklif.pricing.KurService.cevir(kdvTL, pb),
+                    moneyStyleT, moneyStyleU);
+
+            writeSummary(sheet, 46, 19,
+                    com.teklif.pricing.KurService.cevir(dahilTL, pb),
+                    moneyStyleT, moneyStyleU);
+
+            try (FileOutputStream fos = new FileOutputStream(file)) {
                 workbook.write(fos);
             }
 
-            JOptionPane.showMessageDialog(null,"Excel başarıyla oluşturuldu.");
+            JOptionPane.showMessageDialog(null, "Excel başarıyla oluşturuldu.");
 
-        }catch(Exception ex){
-            JOptionPane.showMessageDialog(null,"Excel hata: "+ex.getMessage());
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(null, "Excel hata: " + ex.getMessage());
         }
     }
- // =====================================================
- // ⭐ PARA FORMAT RESOLVER (ERP STYLE)
- // =====================================================
- private static String getExcelFormat(com.teklif.model.ParaBirimi pb){
 
-     if(pb == null) return "#,##0.00 \"TL\"";
+    private static void copyRowStyle(Row src, Row dest, int from, int to) {
+        dest.setHeight(src.getHeight());
+        for (int c = from; c < to; c++) {
+            Cell s = src.getCell(c);
+            Cell d = dest.getCell(c);
+            if (d == null) d = dest.createCell(c);
+            if (s != null) d.setCellStyle(s.getCellStyle());
+        }
+    }
 
-     switch(pb){
+    private static void writeSummary(Sheet sheet, int rowIndex, int colIndex,
+                                     double value,
+                                     CellStyle styleT,
+                                     CellStyle styleU) {
 
-         case EUR:
-             return "#,##0.00 \"EUR\"";
+        Row row = sheet.getRow(rowIndex);
+        if (row == null) row = sheet.createRow(rowIndex);
 
-         case USD:
-             return "#,##0.00 \"USD\"";
+        Cell tCell = row.getCell(colIndex);
+        if (tCell == null) tCell = row.createCell(colIndex);
+        tCell.setCellValue(value);
+        tCell.setCellStyle(styleT);
 
-         default:
-             return "#,##0.00 \"TL\"";
-     }
- }
+        Cell uCell = row.getCell(colIndex + 1);
+        if (uCell == null) uCell = row.createCell(colIndex + 1);
+        uCell.setCellStyle(styleU);
+    }
+
+    private static String getExcelFormat(com.teklif.model.ParaBirimi pb) {
+        if (pb == null) return "#,##0.00 \"TL\"";
+
+        switch (pb) {
+            case EUR: return "#,##0.00 \"EUR\"";
+            case USD: return "#,##0.00 \"USD\"";
+            default:  return "#,##0.00 \"TL\"";
+        }
+    }
 }
