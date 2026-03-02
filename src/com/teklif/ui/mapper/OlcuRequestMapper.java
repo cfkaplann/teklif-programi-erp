@@ -7,6 +7,8 @@ import com.teklif.model.dto.PricingRequest;
 import com.teklif.ui.component.OlcuComponent;
 
 public class OlcuRequestMapper {
+	
+	private static final boolean DEBUG = false;
 
 	public static void map(PricingRequest.Builder builder, List<OlcuComponent> comps) {
 
@@ -81,7 +83,9 @@ public class OlcuRequestMapper {
 				break;
 			}
 
-			System.out.println("TIP = " + tip + " VALUE = [" + c.getValue() + "]");
+			if (DEBUG) {
+			    System.out.println("TIP = " + tip + " VALUE = [" + c.getValue() + "]");
+			}
 
 		}
 		// =====================================

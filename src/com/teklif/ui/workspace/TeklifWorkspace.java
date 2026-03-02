@@ -37,6 +37,7 @@ public class TeklifWorkspace extends JPanel {
 	private final ActionBarPanel actions;
 	private final TeklifTablePanel table;
 	private TeklifController controller = new TeklifController();
+	private static final boolean DEBUG = false;
 	
 	private JPanel motorContainer;
 	private Map<String, JTextField> motorInputs = new HashMap<>();
@@ -414,7 +415,9 @@ public class TeklifWorkspace extends JPanel {
 		
 		String ozellikSuffix = buildOzellikSuffix(secimler);
 
-		System.out.println(secimler);
+		if (DEBUG) {
+		    System.out.println(secimler);
+		}
 
 		// =====================================================
 		// ⭐ CONTROLLER ÜZERİNDEN HESAPLA
@@ -715,8 +718,7 @@ public class TeklifWorkspace extends JPanel {
 
 	                boolean fiyatliAksesuar =
 	                        secim.equalsIgnoreCase("Servo Motor 24V") ||
-	                        secim.equalsIgnoreCase("Servo Motor 230V") ||
-	                        secim.equalsIgnoreCase("Limit Switch");
+	                        secim.equalsIgnoreCase("Servo Motor 230V");
 
 	                if(fiyatliAksesuar){
 

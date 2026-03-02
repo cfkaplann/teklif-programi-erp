@@ -77,5 +77,17 @@ public class PricingRequest {
     public String getKasaCap(){
         return kasaCap;
     }
+    public String buildCacheKey() {
 
+        // null-safe key
+        return String.valueOf(sheetName) + "|" +
+                "w=" + String.valueOf(w) + "|" +
+                "h=" + String.valueOf(h) + "|" +
+                "l=" + String.valueOf(l) + "|" +
+                "slot=" + String.valueOf(slot) + "|" +
+                "d=" + String.valueOf(diameter) + "|" +
+                "dis=" + String.valueOf(disOlcu) + "|" +
+                "bogaz=" + String.valueOf(bogazOlcu) + "|" +
+                "kasaCap=" + String.valueOf(kasaCap);
+    }
 }
