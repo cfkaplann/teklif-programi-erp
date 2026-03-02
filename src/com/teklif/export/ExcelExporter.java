@@ -1,253 +1,219 @@
 package com.teklif.export;
 
+import com.teklif.model.ParaBirimi;
+import com.teklif.pricing.KurService;
+
 import javax.swing.*;
 import javax.swing.table.TableModel;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
+import java.io.*;
 
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class ExcelExporter {
 
-    private static final String TEMPLATE_PATH = "/teklif_sablon.xlsx";
-    private static final String SHEET_NAME = "Teklif";
+	private static final String TEMPLATE_PATH = "/teklif_sablon.xlsx";
+	private static final String SHEET_NAME = "Teklif";
+	private static final int TEMPLATE_ROW_INDEX = 25;
 
-    private static final int TEMPLATE_DATA_ROW_INDEX = 25; // Excel 26. satır
+	private static final int[] COL_MAP = { 1, 2, 3, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
 
-    // JTable kolon index -> Excel kolon index
-    private static final int[] COL_MAP = {
-            1, 2, 3, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
-    };
+	public static void export(JTable table, ParaBirimi paraBirimi) {
 
-    private static String toExcelText(Object value) {
-        if (value == null) return "";
-        String s = value.toString();
+		JFileChooser chooser = new JFileChooser();
+		chooser.setSelectedFile(new File("teklif.xlsx"));
 
-        if (s.toLowerCase().startsWith("<html>")) {
-            s = s.replaceAll("(?i)<br\\s*/?>", "\n");
-            s = s.replaceAll("(?i)<hr\\s*/?>", "\n");
-            s = s.replaceAll("<[^>]*>", "");
-        }
+		if (chooser.showSaveDialog(null) != JFileChooser.APPROVE_OPTION)
+			return;
 
-        return s.replace("<br>", "\n").replace("<hr>", "\n").trim();
-    }
+		File file = chooser.getSelectedFile();
 
-    public static void export(JTable table, com.teklif.model.ParaBirimi pb) {
+		try (InputStream is = ExcelExporter.class.getResourceAsStream(TEMPLATE_PATH);
+				Workbook workbook = new XSSFWorkbook(is);
+				FileOutputStream fos = new FileOutputStream(file)) {
 
-        JFileChooser chooser = new JFileChooser();
-        chooser.setSelectedFile(new File("teklif.xlsx"));
+			Sheet sheet = workbook.getSheet(SHEET_NAME);
+			TableModel model = table.getModel();
+			int productCount = model.getRowCount();
 
-        if (chooser.showSaveDialog(null) != JFileChooser.APPROVE_OPTION)
-            return;
+			if (productCount == 0)
+				return;
 
-        File file = chooser.getSelectedFile();
+			// 🔥 Para formatı oluştur
+			String symbol = paraBirimi.getSymbol();
+			DataFormat df = workbook.createDataFormat();
+			CellStyle currencyStyle = workbook.createCellStyle();
+			currencyStyle.setDataFormat(df.getFormat("#,##0.00 \"" + symbol + "\""));
 
-        InputStream is = ExcelExporter.class.getResourceAsStream(TEMPLATE_PATH);
-        if (is == null) {
-            JOptionPane.showMessageDialog(null, "Şablon bulunamadı!");
-            return;
-        }
+			for (int r = 0; r < productCount; r++) {
 
-        TableModel model = table.getModel();
+				Row row = sheet.getRow(TEMPLATE_ROW_INDEX + r);
+				if (row == null)
+					continue;
 
-        try (Workbook workbook = new XSSFWorkbook(is)) {
+				clearMappedCells(row);
 
-            Sheet sheet = workbook.getSheet(SHEET_NAME);
-            if (sheet == null) {
-                JOptionPane.showMessageDialog(null, "Sheet bulunamadı!");
-                return;
-            }
+				for (int jCol = 0; jCol < COL_MAP.length; jCol++) {
 
-            Row templateRow = sheet.getRow(TEMPLATE_DATA_ROW_INDEX);
-            if (templateRow == null) {
-                JOptionPane.showMessageDialog(null, "Template veri satırı yok!");
-                return;
-            }
+					int xCol = COL_MAP[jCol];
+					Cell cell = row.getCell(xCol);
+					if (cell == null)
+						cell = row.createCell(xCol);
 
-            DataFormat df = workbook.createDataFormat();
+					Object value = model.getValueAt(r, jCol);
+					if (value == null)
+						continue;
 
-            // ==========================
-            // PARA STYLE (T ve U ayrı)
-            // ==========================
-            CellStyle templateT = templateRow.getCell(19).getCellStyle();
-            CellStyle templateU = templateRow.getCell(20).getCellStyle();
+					// ----------------------------
+					// 🔥 SIRA NO numeric
+					// ----------------------------
+					if (jCol == 0) {
+						cell.setCellValue(Double.parseDouble(value.toString()));
+						continue;
+					}
 
-            CellStyle moneyStyleT = workbook.createCellStyle();
-            moneyStyleT.cloneStyleFrom(templateT);
-            moneyStyleT.setDataFormat(df.getFormat(getExcelFormat(pb)));
+					// ----------------------------
+					// 🔥 Ölçüler & miktar numeric
+					// ----------------------------
+					if (jCol == 3 || jCol == 4 || jCol == 5 || jCol == 6 || jCol == 11) {
 
-            CellStyle moneyStyleU = workbook.createCellStyle();
-            moneyStyleU.cloneStyleFrom(templateU);
-            moneyStyleU.setDataFormat(df.getFormat(getExcelFormat(pb)));
+						try {
 
-            // ==========================
-            // WRAP STYLE (ürün adı için)
-            // ==========================
-            CellStyle templateText = templateRow.getCell(3).getCellStyle();
+							double number = Double.parseDouble(value.toString());
 
-            CellStyle wrapStyle = workbook.createCellStyle();
-            wrapStyle.cloneStyleFrom(templateText);
-            wrapStyle.setWrapText(true);
+							// 🔥 Eğer 0 ise hücreyi boş bırak
+							if (number == 0) {
+								cell.setBlank();
+							} else {
+								cell.setCellValue(number);
+							}
 
-            int dataStartRow = TEMPLATE_DATA_ROW_INDEX;
+						} catch (Exception ex) {
+							cell.setBlank(); // ❗ artık 0 yazmıyoruz
+						}
 
-            // ==========================
-            // DATA SATIRLARI
-            // ==========================
-            for (int r = 0; r < model.getRowCount(); r++) {
+						continue;
+					}
+					// ----------------------------
+					// 🔥 Fiyat kolonları
+					// ----------------------------
+					if (jCol == 13 || jCol == 14) {
 
-                int excelRowIndex = dataStartRow + r;
+						try {
+							double tlValue = Double.parseDouble(value.toString());
 
-                Row row = sheet.getRow(excelRowIndex);
-                if (row == null) row = sheet.createRow(excelRowIndex);
+							// ⭐ TL -> Seçili para birimi dönüşümü
+							double converted = KurService.cevir(tlValue, paraBirimi);
 
-                copyRowStyle(templateRow, row, 0, 21);
+							cell.setCellValue(converted);
 
-                for (int c = 0; c < model.getColumnCount(); c++) {
+							// Mevcut style'ı kopyala
+							CellStyle originalStyle = cell.getCellStyle();
+							CellStyle newStyle = workbook.createCellStyle();
 
-                    int targetCol = COL_MAP[c];
-                    Cell cell = row.getCell(targetCol);
-                    if (cell == null) cell = row.createCell(targetCol);
+							newStyle.cloneStyleFrom(originalStyle);
+							newStyle.setDataFormat(
+									workbook.createDataFormat().getFormat("#,##0.00 \"" + symbol + "\""));
 
-                    Object val = model.getValueAt(r, c);
-                    boolean written = false;
+							cell.setCellStyle(newStyle);
 
-                    if (val instanceof Number) {
+						} catch (Exception ex) {
+							cell.setCellValue(0);
+						}
+						continue;
+					}
 
-                        double d = ((Number) val).doubleValue();
+					// ----------------------------
+					// 🔥 Text alanlar
+					// ----------------------------
+					String text = value.toString();
 
-                        if (c == 13 || c == 14) {
+					text = text.replaceAll("(?i)<br\\s*/?>", " ").replaceAll("(?i)</html>", "")
+							.replaceAll("(?i)<html>", "").replaceAll("(?i)<[^>]+>", "");
 
-                            d = com.teklif.pricing.KurService.cevir(d, pb);
+					cell.setCellValue(text.trim());
+				}
+			}
+			// -----------------------------
+			// SUMMARY
+			// -----------------------------
 
-                            if (c == 14) { // Toplam Fiyat T:U
-                                cell.setCellStyle(moneyStyleT);
+			int firstExcelRow = TEMPLATE_ROW_INDEX + 1;
+			int lastExcelRow = TEMPLATE_ROW_INDEX + productCount;
 
-                                Cell uCell = row.getCell(20);
-                                if (uCell == null) uCell = row.createCell(20);
-                                uCell.setCellStyle(moneyStyleU);
-                            } else {
-                                cell.setCellStyle(moneyStyleT);
-                            }
-                        }
+			Row genelRow = sheet.getRow(126);
+			Row kdvRow = sheet.getRow(127);
+			Row dahilRow = sheet.getRow(128);
 
-                        cell.setCellValue(d);
-                        written = true;
-                    }
+			if (genelRow != null) {
 
-                    if (!written && val != null) {
+				Cell c = genelRow.getCell(18);
+				if (c != null) {
 
-                        String raw = toExcelText(val).replace(",", ".").trim();
+					c.setCellFormula("SUM(S" + firstExcelRow + ":S" + lastExcelRow + ")");
 
-                        try {
-                            double d = Double.parseDouble(raw);
+					CellStyle original = c.getCellStyle();
+					CellStyle newStyle = workbook.createCellStyle();
+					newStyle.cloneStyleFrom(original);
 
-                            if (c == 13 || c == 14) {
+					newStyle.setDataFormat(workbook.createDataFormat().getFormat("#,##0.00 \"" + symbol + "\""));
 
-                                d = com.teklif.pricing.KurService.cevir(d, pb);
+					c.setCellStyle(newStyle);
+				}
+			}
 
-                                if (c == 14) {
-                                    cell.setCellStyle(moneyStyleT);
+			if (kdvRow != null) {
+				Cell c = kdvRow.getCell(18);
+				if (c != null) {
 
-                                    Cell uCell = row.getCell(20);
-                                    if (uCell == null) uCell = row.createCell(20);
-                                    uCell.setCellStyle(moneyStyleU);
-                                } else {
-                                    cell.setCellStyle(moneyStyleT);
-                                }
-                            }
+					c.setCellFormula("S127*0.20");
 
-                            cell.setCellValue(d);
-                            written = true;
+					CellStyle original = c.getCellStyle();
+					CellStyle newStyle = workbook.createCellStyle();
+					newStyle.cloneStyleFrom(original);
 
-                        } catch (Exception ignore) {}
-                    }
+					newStyle.setDataFormat(workbook.createDataFormat().getFormat("#,##0.00 \"" + symbol + "\""));
 
-                    if (!written) {
+					c.setCellStyle(newStyle);
+				}
+			}
 
-                        String text = toExcelText(val);
-                        if (!text.isBlank()) cell.setCellValue(text);
+			if (dahilRow != null) {
+				Cell c = dahilRow.getCell(18);
+				if (c != null) {
 
-                        if (text.contains("\n")) {
-                            cell.setCellStyle(wrapStyle);
-                        }
-                    }
-                }
-            }
+					c.setCellFormula("S127+S128");
 
-            // ==========================
-            // SUMMARY
-            // ==========================
-            double genelTL = 0;
-            for (int r = 0; r < model.getRowCount(); r++) {
-                Object v = model.getValueAt(r, 14);
-                if (v instanceof Number)
-                    genelTL += ((Number) v).doubleValue();
-            }
+					CellStyle original = c.getCellStyle();
+					CellStyle newStyle = workbook.createCellStyle();
+					newStyle.cloneStyleFrom(original);
 
-            double kdvTL = genelTL * 0.20;
-            double dahilTL = genelTL + kdvTL;
+					newStyle.setDataFormat(workbook.createDataFormat().getFormat("#,##0.00 \"" + symbol + "\""));
 
-            writeSummary(sheet, 44, 19,
-                    com.teklif.pricing.KurService.cevir(genelTL, pb),
-                    moneyStyleT, moneyStyleU);
+					c.setCellStyle(newStyle);
+				}
+			}
+			workbook.write(fos);
 
-            writeSummary(sheet, 45, 19,
-                    com.teklif.pricing.KurService.cevir(kdvTL, pb),
-                    moneyStyleT, moneyStyleU);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
-            writeSummary(sheet, 46, 19,
-                    com.teklif.pricing.KurService.cevir(dahilTL, pb),
-                    moneyStyleT, moneyStyleU);
+	private static void clearMappedCells(Row row) {
 
-            try (FileOutputStream fos = new FileOutputStream(file)) {
-                workbook.write(fos);
-            }
+		for (int xCol : COL_MAP) {
 
-            JOptionPane.showMessageDialog(null, "Excel başarıyla oluşturuldu.");
+			// Ürün adı D:G merge alanı
+			// Sadece D kolonunu temizle (3 index)
+			if (xCol == 4 || xCol == 5 || xCol == 6)
+				continue;
 
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(null, "Excel hata: " + ex.getMessage());
-        }
-    }
+			Cell cell = row.getCell(xCol);
 
-    private static void copyRowStyle(Row src, Row dest, int from, int to) {
-        dest.setHeight(src.getHeight());
-        for (int c = from; c < to; c++) {
-            Cell s = src.getCell(c);
-            Cell d = dest.getCell(c);
-            if (d == null) d = dest.createCell(c);
-            if (s != null) d.setCellStyle(s.getCellStyle());
-        }
-    }
-
-    private static void writeSummary(Sheet sheet, int rowIndex, int colIndex,
-                                     double value,
-                                     CellStyle styleT,
-                                     CellStyle styleU) {
-
-        Row row = sheet.getRow(rowIndex);
-        if (row == null) row = sheet.createRow(rowIndex);
-
-        Cell tCell = row.getCell(colIndex);
-        if (tCell == null) tCell = row.createCell(colIndex);
-        tCell.setCellValue(value);
-        tCell.setCellStyle(styleT);
-
-        Cell uCell = row.getCell(colIndex + 1);
-        if (uCell == null) uCell = row.createCell(colIndex + 1);
-        uCell.setCellStyle(styleU);
-    }
-
-    private static String getExcelFormat(com.teklif.model.ParaBirimi pb) {
-        if (pb == null) return "#,##0.00 \"TL\"";
-
-        switch (pb) {
-            case EUR: return "#,##0.00 \"EUR\"";
-            case USD: return "#,##0.00 \"USD\"";
-            default:  return "#,##0.00 \"TL\"";
-        }
-    }
+			if (cell != null) {
+				cell.setBlank(); // setCellValue("") yerine bunu kullan
+			}
+		}
+	}
 }
