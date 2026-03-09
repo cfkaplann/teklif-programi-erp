@@ -193,6 +193,26 @@ public class ExcelExporter {
 					c.setCellStyle(newStyle);
 				}
 			}
+			
+			PrintSetup printSetup = sheet.getPrintSetup();
+
+			printSetup.setLandscape(false);
+			printSetup.setPaperSize(PrintSetup.A4_PAPERSIZE);
+
+			sheet.setFitToPage(true);
+			printSetup.setFitWidth((short) 1);
+			printSetup.setFitHeight((short) 0);
+
+			int lastRowForPrint = TEMPLATE_ROW_INDEX + productCount + 5;
+
+			workbook.setPrintArea(
+			        workbook.getSheetIndex(sheet),
+			        0,
+			        18,
+			        0,
+			        lastRowForPrint
+			);
+			
 			workbook.write(fos);
 
 		} catch (Exception e) {

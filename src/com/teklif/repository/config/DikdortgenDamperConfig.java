@@ -42,7 +42,7 @@ public class DikdortgenDamperConfig {
 
 								OzellikTipi.MONTAJ, List.of("Hava Kanalına Montaj"),
 
-								OzellikTipi.AKSESUAR_TIPI, List.of("Yok", "Galvaniz Telli")),
+								OzellikTipi.AKSESUAR_TIPI, List.of("Galvaniz Telli")),
 						// 🔥 ZORUNLU ÖLÇÜLER
 						List.of(OlcuAlanTipi.GENISLIK, OlcuAlanTipi.YUKSEKLIK)),
 
@@ -59,7 +59,7 @@ public class DikdortgenDamperConfig {
 
 								OzellikTipi.MONTAJ, List.of("Vidalı", "Hava Kanalına Montaj"),
 
-								OzellikTipi.AKSESUAR_TIPI, List.of("Yok", "Galvaniz Telli")),
+								OzellikTipi.AKSESUAR_TIPI, List.of("Galvaniz Telli")),
 						// 🔥 ZORUNLU ÖLÇÜLER
 						List.of(OlcuAlanTipi.GENISLIK, OlcuAlanTipi.YUKSEKLIK),
 						true   // ⭐ PANJUR = AKSESUAR TEKLİ
