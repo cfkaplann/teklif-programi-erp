@@ -18,6 +18,15 @@ public class SheetNameResolver {
 
         if(urunKodu.startsWith("DMP"))
             return "DMP";
+        
+        if(urunKodu.startsWith("BOX_WH"))
+            return "BOX_WH";
+
+        if(urunKodu.startsWith("BOX_LS"))
+            return "BOX_LS";
+
+        if(urunKodu.startsWith("BOX_STR"))
+            return "BOX_STR";
 
         throw new RuntimeException("Sheet resolve edilemedi: " + urunKodu);
     }

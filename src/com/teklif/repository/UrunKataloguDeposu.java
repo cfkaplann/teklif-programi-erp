@@ -13,6 +13,7 @@ import com.teklif.repository.config.DikdortgenDamperConfig;
 import com.teklif.repository.config.KapakConfig;
 import com.teklif.repository.config.KareAnemostadConfig;
 import com.teklif.repository.config.KareSwirlConfig;
+import com.teklif.repository.config.KutuConfig;
 import com.teklif.repository.config.MenfezConfig;
 import com.teklif.repository.config.PanjurConfig;
 import com.teklif.repository.config.SlotConfig;
@@ -30,7 +31,8 @@ public class UrunKataloguDeposu {
             KareSwirlConfig.get(),
             DaireselSwirlConfig.get(),
             PanjurConfig.get(),
-            KapakConfig.get()
+            KapakConfig.get(),
+            KutuConfig.get()
         )
         .flatMap(List::stream)
         .collect(Collectors.toList());

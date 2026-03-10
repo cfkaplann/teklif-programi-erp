@@ -1,5 +1,7 @@
 package com.teklif.pricing;
 
+import com.teklif.importer.ExcelHotReloadService;
+
 import java.util.*;
 
 import com.teklif.model.OzellikTipi;
@@ -19,8 +21,12 @@ public class PricingService {
     private SqlExcelFiyatService sqlService = new SqlExcelFiyatService();
 
     public PricingResult fiyatHesapla(
+    		
             PricingRequest req,
             Map<OzellikTipi,List<String>> secimler){
+    	
+    	// ⭐ Excel değişti mi kontrol et
+        ExcelHotReloadService.checkAndReload();
 
         double hamFiyat = sqlService.hamFiyatGetir(req);
 

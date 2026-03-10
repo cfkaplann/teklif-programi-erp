@@ -69,6 +69,8 @@ public class OzellikDeposu {
 		aksesuar.put("Poliüretan Filtreli", new OzellikOran(0.25, false));
 		aksesuar.put("Alüminyum Telli", new OzellikOran(0.20, false));
 		aksesuar.put("G2 Elyaf Filtreli", new OzellikOran(0.15, false));
+		aksesuar.put("Dış İzoleli", new OzellikOran(0.15, false));
+		aksesuar.put("İç İzoleli", new OzellikOran(0.15, false));
 		oranlar.put(OzellikTipi.AKSESUAR_TIPI, aksesuar);
 
 		// MENFEZ TİPİ

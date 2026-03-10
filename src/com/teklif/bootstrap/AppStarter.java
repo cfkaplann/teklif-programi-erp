@@ -77,20 +77,13 @@ public class AppStarter {
 			empty = rs.getInt(1) == 0;
 		}
 
-		if (empty) {
+		System.out.println("📊 Excel fiyat tabloları kontrol ediliyor...");
 
-			System.out.println("📊 Fiyat tabloları boş → Excel import başlıyor...");
+		MasterExcelImporter importer = new MasterExcelImporter();
+		String excelPath = extractExcelFromResource();
+		importer.importAll(excelPath);
 
-			MasterExcelImporter importer = new MasterExcelImporter();
-			String excelPath = extractExcelFromResource();
-			importer.importAll(excelPath);
-
-			System.out.println("✅ Excel import tamamlandı.");
-
-		} else {
-
-			System.out.println("✅ Fiyat tabloları zaten mevcut.");
-		}
+		System.out.println("✅ Excel import / güncelleme tamamlandı.");
 	}
 
 

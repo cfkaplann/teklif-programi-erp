@@ -15,7 +15,9 @@ public enum UrunKategori {
     DAIRESEL_SWIRL("Dairesel Swirl Difüzör"),
 
     PANJUR("Panjur"),
-    KAPAK("Kapak");
+    KAPAK("Kapak"),
+    
+    KUTU("Kutu");
 
     private final String displayName;
 

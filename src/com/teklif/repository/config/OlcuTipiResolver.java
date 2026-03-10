@@ -38,6 +38,15 @@ public class OlcuTipiResolver {
 
         if(urunKodu.startsWith("KPK"))
             return OlcuTipi.MATRIX_WH;
+        
+        if(urunKodu.startsWith("BOX_WH"))
+            return OlcuTipi.MATRIX_WH;
+        
+        if(urunKodu.startsWith("BOX_LS"))
+            return OlcuTipi.MATRIX_L_SLOT;
+        
+        if(urunKodu.startsWith("BOX_STR"))
+            return OlcuTipi.STRING_SIZE_SINGLE;
 
         throw new RuntimeException("Olcu tipi bulunamadı : " + urunKodu);
     }
